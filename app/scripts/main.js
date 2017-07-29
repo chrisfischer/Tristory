@@ -3,14 +3,6 @@ var background = chrome.extension.getBackgroundPage()
 document.addEventListener('DOMContentLoaded', function() {
 	console.log('loaded')
 
-	divId = document.getElementById('id');
-	divId.textContent = 'test'
-
-	divId = document.getElementById('id');
-	if (background.currentTabDoc) {
-		divId.textContent = background.currentTabDoc.tabId
-	}
-
 	var margin = {top: 20, right: 120, bottom: 20, left: 120},
 			width = 2000 //960 - margin.right - margin.left,
 			height = 800 - margin.top - margin.bottom;
@@ -35,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	root = JSON.parse(JSON.stringify({'children': background.urlDocs,
 									  'title': 'New Tab'}, 
-									  ['url', 'title', 'children']));
+									  ['url', 'title', 'fullTitle', 'children']));
 	root.x0 = height / 2;
 	root.y0 = 0;
 
@@ -90,7 +82,9 @@ document.addEventListener('DOMContentLoaded', function() {
 		var nodeEnter = node.enter().append("g")
 				.attr("class", "node")
 				.attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
-				.on("click", click);
+				.on("click", click)
+				.on("mouseover", hoverOn)
+				.on("mouseout", hoverOff);
 
 		nodeEnter.append("circle")
 				.attr("r", 1e-6)
@@ -170,6 +164,18 @@ document.addEventListener('DOMContentLoaded', function() {
 			d._children = null;
 		}
 		update(d);
+	}
+
+	function hoverOn(d) {
+		divFullTitle = document.getElementById('fullTitle');
+		if (d.fullTitle) {
+			divFullTitle.textContent = d.fullTitle
+		}
+	}
+
+	function hoverOff(d) {
+		divFullTitle = document.getElementById('fullTitle');
+		divFullTitle.textContent = '\u00A0';
 	}
 });
 
