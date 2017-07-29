@@ -2,19 +2,25 @@ urlDocs = [];
 docLimbo = []; // list of documents that have no title
 currentTabDoc = null; // if null means new tab
 
+FLAG_CREATED = false; // turns true if a tab was just created
+
 function addNewStartingNode(doc) {
-		if (doc) {
-			urlDocs.push(doc);
-		}
+	if (doc) {
+		urlDocs.push(doc);
+	}
 }
 
 function addChild(child) {
-		if (child) {
-			currentTabDoc['children'].push(child);
-		}
+	if (child) {
+		currentTabDoc['children'].push(child);
+	}
 }
 
 function addTitleToLimbo(tabId, url, title) {
+	if (title.length > 20) {
+		title = title.substring(0,20) + '...';
+	}
+
 	for (i = 0; i < docLimbo.length; i++) {
 		currDoc = docLimbo[i];
 		if (currDoc.tabId == tabId && currDoc.url == url) {
@@ -26,282 +32,117 @@ function addTitleToLimbo(tabId, url, title) {
 
 chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 
-		if (changeInfo.title) {
-			addTitleToLimbo(tab.id, tab.url, changeInfo.title);
+	if (changeInfo.title) {
+		addTitleToLimbo(tab.id, tab.url, changeInfo.title);
+		return;
+	}
+
+	newUrl = changeInfo.url;
+	if (!newUrl || newUrl == 'chrome://newtab/' || newUrl.substring(0,16) == 'chrome-extension') {
 			return;
+	}
+	if (currentTabDoc && currentTabDoc['parent']) {
+		parentReferenced = findDocInBranch(newUrl, currentTabDoc['parent'])
+		if (parentReferenced) {
+				currentTabDoc = parentReferenced;
+				return; // its not null, there was a parent that we went back to, no need to add a new document
 		}
+	}
 
-		newUrl = changeInfo.url;
-		if (!newUrl || newUrl == 'chrome://newtab/' || newUrl.substring(0,16) == 'chrome-extension') {
-				return;
-		}
-		if (currentTabDoc && currentTabDoc['parent']) {
-			parentReferenced = findDocInBranch(updatedTabId, newUrl, currentTabDoc['parent'])
-			if (parentReferenced) {
-					currentTabDoc = parentReferenced;
-					return; // its not null, there was a parent that we went back to, no need to add a new document
-			}
-		}
+	// TODO refractor this
 
-		// TODO refractor this
-
-		// parent id 
-		// is the parent new
-		if (!currentTabDoc) {
-			// create new document to store
-			doc = {
-					'tabId': updatedTabId,
-					'url': newUrl,
-					'children': [],
-					'parent': null,
-					'title': tab.title
-			}
-			addNewStartingNode(doc)
-			docLimbo.push(doc)
-			currentTabDoc = doc
-		} else {
-			// update appropriate document
-			doc = {
-					'tabId': updatedTabId,
-					'url': newUrl,
-					'children': [],
-					'parent': currentTabDoc,
-					'title': tab.title
-			}
-			addChild(doc)
-			docLimbo.push(doc)
-			if (updatedTabId == currentTabDoc.tabId) {
-				currentTabDoc = doc
-			}
+	// parent id 
+	// is the parent new
+	if (!currentTabDoc) {
+		// create new document to store
+		doc = {
+				'tabId': updatedTabId,
+				'url': newUrl,
+				'children': [],
+				'parent': null,
+				'title': tab.title
 		}
-		console.log(urlDocs, currentTabDoc);
+		addNewStartingNode(doc);
+		docLimbo.push(doc);
+		currentTabDoc = doc;
+	} else {
+		// update appropriate document
+		doc = {
+				'tabId': updatedTabId,
+				'url': newUrl,
+				'children': [],
+				'parent': currentTabDoc,
+				'title': tab.title
+		}
+		addChild(doc);
+		docLimbo.push(doc);
+		if (updatedTabId == currentTabDoc.tabId) {
+			currentTabDoc = doc;
+		}
+	}
+	console.log('onUpdated', urlDocs, currentTabDoc);
 }); 
 
-function findDocInBranch(targetId, targetUrl, baseDoc) {
-		console.log('find one in branch called');
-		if (baseDoc['tabId'] == targetId && baseDoc['url'] == targetUrl) {
-			return baseDoc;
-		} else if (baseDoc['parent']) {
-			return findDocInBranch(targetId, targetUrl, baseDoc['parent']);
-		} else {
-			return null;
-		}
+function findDocInBranch(targetUrl, baseDoc) {
+	console.log('find one in branch called', targetUrl, baseDoc);
+	if (baseDoc['url'] == targetUrl) {
+		return baseDoc;
+	} else if (baseDoc['parent']) {
+		return findDocInBranch(targetUrl, baseDoc['parent']);
+	} else {
+		return null;
+	}
 }
 
 function findDoc(targetId, targetUrl, arrOfDocs) {
-		for (i = 0; i < arrOfDocs.length; i++) {
-			currDoc = arrOfDocs[i];
-			if (currDoc['tabId'] == targetId && currDoc['url'] == targetUrl) {
-					return currDoc;
-			} else if (currDoc['children'].length == 0) {
-					continue;
-			} else {
-					return findDoc(targetId, targetUrl, currDoc['children']);
-			}
+	console.log('find doc', targetUrl, arrOfDocs)
+	for (i = 0; i < arrOfDocs.length; i++) {
+		currDoc = arrOfDocs[i];
+		if (currDoc['tabId'] == targetId && currDoc['url'] == targetUrl) {
+				return currDoc;
+		} else if (currDoc['children'].length == 0) {
+				continue;
+		} else {
+				return findDoc(targetId, targetUrl, currDoc['children']);
 		}
-		return null;
+	}
+	return null;
 }
 
 function onActivateOrCreate(highlightInfo) {
-		var queryInfo = {
-			active: true,
-			currentWindow: true
-		};
+	var queryInfo = {
+		active: true,
+		currentWindow: true
+	};
 
-		chrome.tabs.query(queryInfo, function(tabs) {
-			var tab = tabs[0];
-			var id = tab.id;
-			var url = tab.url;
-			if (!id || !url) {
-				return;
-			}
+	chrome.tabs.query(queryInfo, function(tabs) {
+		var tab = tabs[0];
+		var id = tab.id;
+		var url = tab.url;
+		if (!id || !url) {
+			return;
+		}
 
-			if (url == 'chrome://newtab/') {
-				currentTabDoc = null;
-			} else if (url.substring(0,16) == 'chrome-extension') {
-				return
-			} else {
-				currentTabDoc = findDoc(id, url, urlDocs);
-				if (currentTabDoc) {
-					currentTabDoc.title = tab.title;
-				}
+		if (url == 'chrome://newtab/') {
+			currentTabDoc = null;
+		} else if (FLAG_CREATED) {
+			// new tab was just created
+			FLAG_CREATED = false;
+			return;
+		} else if (url.substring(0,16) == 'chrome-extension') {
+			return;
+		} else {
+			currentTabDoc = findDoc(id, url, urlDocs);
+			if (currentTabDoc) {
+				// idk maybe set title
 			}
-			console.log(urlDocs, currentTabDoc);
-		});
+		}
+		console.log('onSwitch', urlDocs, currentTabDoc);
+	});
 }
 
 chrome.tabs.onActivated.addListener(onActivateOrCreate);
-//chrome.tabs.onCreated.addListener(on_activate_or_create)
-
-
-function updateView() {
-
-	divId = document.getElementById('id');
-	divId.textContent = 'test'
-	console.log('loaded')
-	divId = document.getElementById('id');
-	if (currentTabDoc) {
-		divId.textContent = currentTabDoc.tabId
-	}
-
-	var margin = {top: 20, right: 120, bottom: 20, left: 120},
-			width = 960 - margin.right - margin.left,
-			height = 800 - margin.top - margin.bottom;
-
-	var i = 0,
-			duration = 750,
-			root;
-
-	var tree = d3.layout.tree()
-			.size([height, width]);
-
-	var diagonal = d3.svg.diagonal()
-			.projection(function(d) { return [d.y, d.x]; });
-
-	var svg = d3.select("body").append("svg")
-			.attr("width", width + margin.right + margin.left)
-			.attr("height", height + margin.top + margin.bottom)
-			.append("g")
-			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-	if (urlDocs.length == 0) { return }
-
-	root = JSON.parse(JSON.stringify(urlDocs[0], ['url', 'title', 'children']));
-	root.x0 = height / 2;
-	root.y0 = 0;
-
-	function collapse(d) {
-		if (d.children.length != 0) {
-			d._children = d.children;
-			d._children.forEach(collapse);
-			d.children = null;
-		}
-	}
-
-	root.children.forEach(collapse);
-	update(root);
-	
-	/*
-	d3.json("flare.json", function(error, flare) {
-		if (error) throw error;
-	
-		root = flare;
-		root.x0 = height / 2;
-		root.y0 = 0;
-	
-		function collapse(d) {
-			if (d.children) {
-				d._children = d.children;
-				d._children.forEach(collapse);
-				d.children = null;
-			}
-		}
-	
-		root.children.forEach(collapse);
-		update(root);
-	});
-	*/
-
-	d3.select(self.frameElement).style("height", "800px");
-
-	function update(source) {
-
-		// Compute the new tree layout.
-		var nodes = tree.nodes(root).reverse(),
-				links = tree.links(nodes);
-
-		// Normalize for fixed-depth.
-		nodes.forEach(function(d) { d.y = d.depth * 180; });
-
-		// Update the nodes…
-		var node = svg.selectAll("g.node")
-				.data(nodes, function(d) { return d.id || (d.id = ++i); });
-
-		// Enter any new nodes at the parent's previous position.
-		var nodeEnter = node.enter().append("g")
-				.attr("class", "node")
-				.attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
-				.on("click", click);
-
-		nodeEnter.append("circle")
-				.attr("r", 1e-6)
-				.style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
-
-		nodeEnter.append("text")
-				.attr("x", function(d) { return d.children || d._children ? -10 : 10; })
-				.attr("dy", ".35em")
-				.attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-				.text(function(d) { return d.title; })
-				.style("fill-opacity", 1e-6);
-
-		// Transition nodes to their new position.
-		var nodeUpdate = node.transition()
-				.duration(duration)
-				.attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
-
-		nodeUpdate.select("circle")
-				.attr("r", 4.5)
-				.style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
-
-		nodeUpdate.select("text")
-				.style("fill-opacity", 1);
-
-		// Transition exiting nodes to the parent's new position.
-		var nodeExit = node.exit().transition()
-				.duration(duration)
-				.attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
-				.remove();
-
-		nodeExit.select("circle")
-				.attr("r", 1e-6);
-
-		nodeExit.select("text")
-				.style("fill-opacity", 1e-6);
-
-		// Update the links…
-		var link = svg.selectAll("path.link")
-				.data(links, function(d) { return d.target.id; });
-
-		// Enter any new links at the parent's previous position.
-		link.enter().insert("path", "g")
-				.attr("class", "link")
-				.attr("d", function(d) {
-					var o = {x: source.x0, y: source.y0};
-					return diagonal({source: o, target: o});
-				});
-
-		// Transition links to their new position.
-		link.transition()
-				.duration(duration)
-				.attr("d", diagonal);
-
-		// Transition exiting nodes to the parent's new position.
-		link.exit().transition()
-				.duration(duration)
-				.attr("d", function(d) {
-					var o = {x: source.x, y: source.y};
-					return diagonal({source: o, target: o});
-				})
-				.remove();
-
-		// Stash the old positions for transition.
-		nodes.forEach(function(d) {
-			d.x0 = d.x;
-			d.y0 = d.y;
-		});
-	}
-
-	// Toggle children on click.
-	function click(d) {
-		if (d.children) {
-			d._children = d.children;
-			d.children = null;
-		} else {
-			d.children = d._children;
-			d._children = null;
-		}
-		update(d);
-	}
-}
-
-
+chrome.tabs.onCreated.addListener(function () {
+	console.log('onCreated');
+	FLAG_CREATED = true;
+})

@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	var margin = {top: 20, right: 120, bottom: 20, left: 120},
-			width = 960 - margin.right - margin.left,
+			width = 2000 //960 - margin.right - margin.left,
 			height = 800 - margin.top - margin.bottom;
 
 	var i = 0,
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	if (background.urlDocs.length == 0) { return }
 
 	root = JSON.parse(JSON.stringify({'children': background.urlDocs,
-									  'title': 'History'}, 
+									  'title': 'New Tab'}, 
 									  ['url', 'title', 'children']));
 	root.x0 = height / 2;
 	root.y0 = 0;
