@@ -1,11 +1,37 @@
 var background = chrome.extension.getBackgroundPage()
 
+$.material.init()
+
+
+IS_SHIFT_PRESSED = false
+function checkKeyPressed(e) {
+	// shift
+	if (e.keyCode == 16) {
+		IS_SHIFT_PRESSED = true 
+	}
+	console.log(e, IS_SHIFT_PRESSED)
+}
+
+function checkKeyUp(e) {
+	// shift
+	if (e.keyCode == 16) {
+		IS_SHIFT_PRESSED = false 
+	}
+	
+	console.log(e, IS_SHIFT_PRESSED)
+}
+document.onkeydown = checkKeyPressed;
+document.onkeyup = checkKeyUp;
+
 document.addEventListener('DOMContentLoaded', function() {
-	console.log('loaded')
+	renderTree()
+});
+
+function renderTree() {
 
 	var margin = {top: 20, right: 120, bottom: 20, left: 120},
 			width = 2000 //960 - margin.right - margin.left,
-			height = 800 - margin.top - margin.bottom;
+			height = 850 - margin.top - margin.bottom;
 
 	var i = 0,
 			duration = 750,
@@ -17,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	var diagonal = d3.svg.diagonal()
 			.projection(function(d) { return [d.y, d.x]; });
 
-	var svg = d3.select("body").append("svg")
+	var svg = d3.select("body").select("tree").append("svg")
 			.attr("width", width + margin.right + margin.left)
 			.attr("height", height + margin.top + margin.bottom)
 			.append("g")
@@ -26,13 +52,13 @@ document.addEventListener('DOMContentLoaded', function() {
 	if (background.urlDocs.length == 0) { return }
 
 	root = JSON.parse(JSON.stringify({'children': background.urlDocs,
-									  'title': 'New Tab'}, 
-									  ['url', 'title', 'fullTitle', 'children']));
+										'title': 'New Tab'}, 
+										['url', 'title', 'fullTitle', 'children']));
 	root.x0 = height / 2;
 	root.y0 = 0;
 
 	function collapse(d) {
-		if (d.children.length != 0) {
+		if (d.children) {
 			d._children = d.children;
 			d._children.forEach(collapse);
 			d.children = null;
@@ -73,7 +99,13 @@ document.addEventListener('DOMContentLoaded', function() {
 				.attr("x", function(d) { return d.children || d._children ? -10 : 10; })
 				.attr("dy", ".35em")
 				.attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-				.text(function(d) { return d.title; })
+				.text(function(d) { 
+					if (d.title) {
+						return d.title; 
+					} else {
+						return d.url.substring(0,20) + '...'
+					}
+				})
 				.style("fill-opacity", 1e-6);
 
 		// Transition nodes to their new position.
@@ -135,6 +167,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	// Toggle children on click.
 	function click(d) {
+		if (IS_SHIFT_PRESSED) {
+			chrome.tabs.create({url: d.url});
+			return;
+		}
 		if (d.children) {
 			d._children = d.children;
 			d.children = null;
@@ -156,6 +192,42 @@ document.addEventListener('DOMContentLoaded', function() {
 		divFullTitle = document.getElementById('fullTitle');
 		divFullTitle.textContent = '\u00A0';
 	}
-});
 
+	// expand all
 
+	btn = document.getElementById('expandAll')
+	btn.addEventListener('click', function() {
+		toggleExpand(btn)
+	});
+
+	function toggleExpand(btn) {
+		if (btn.textContent == 'Expand All') {
+			expandAll()
+			btn.textContent = 'Collapse All'
+		} else {
+			collapseAll()
+			btn.textContent = 'Expand All'
+		}
+	}
+
+	function expand(d){   
+    var children = (d.children)?d.children:d._children;
+    if (d._children) {        
+        d.children = d._children;
+        d._children = null;       
+    }
+    if(children)
+      children.forEach(expand);
+	}
+
+	function expandAll(){
+	  expand(root); 
+	  update(root);
+	}
+
+	function collapseAll(){
+	  root.children.forEach(collapse);
+	  //collapse(root);
+	  update(root);
+	}
+}

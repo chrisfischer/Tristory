@@ -14,7 +14,11 @@ function addNewStartingNode(doc) {
 
 function addChild(child) {
 	if (child) {
-		currentTabDoc['children'].push(child);
+		if (currentTabDoc.children) {
+			currentTabDoc.children.push(child);
+		} else {
+			currentTabDoc.children = [child]
+		}
 	}
 }
 
@@ -70,7 +74,7 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 		doc = {
 				'tabId': updatedTabId,
 				'url': newUrl,
-				'children': [],
+				'children': null,
 				'parent': null,
 				'title': null,
 				'fullTitle': null
@@ -87,14 +91,14 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 		doc = {
 				'tabId': updatedTabId,
 				'url': newUrl,
-				'children': [],
+				'children': null,
 				'parent': currentTabDoc,
 				'title': null,
 				'fullTitle': null
 		}
 		addChild(doc);
 
-		if (newUrl.includes(currentTabDoc.url)) {
+		if (newUrl.includes('#') && newUrl.includes(currentTabDoc.url)) {
 			// possibly a change of section in the path using #
 			doc.title = currentTabDoc.title
 			doc.fullTitle = currentTabDoc.fullTitle
@@ -112,17 +116,23 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 }); 
 
 function findDocInBranch(targetUrl, baseDoc) {
+	/*
+	Search upwards to find matching parent
+	*/
 	console.log('find one in branch called', targetUrl, baseDoc);
-	if (baseDoc['url'] == targetUrl) {
+	if (baseDoc.url == targetUrl) {
 		return baseDoc;
-	} else if (baseDoc['parent']) {
-		return findDocInBranch(targetUrl, baseDoc['parent']);
+	} else if (baseDoc.parent) {
+		return findDocInBranch(targetUrl, baseDoc.parent);
 	} else {
 		return null;
 	}
 }
 
 function findDoc(targetId, targetUrl, arrOfDocs) {
+	/*
+	Depth first search to find arbitrary doc
+	*/
 	console.log('find doc', targetUrl, arrOfDocs)
 	for (i = 0; i < arrOfDocs.length; i++) {
 		currDoc = arrOfDocs[i];

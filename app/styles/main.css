@@ -21,3 +21,11 @@ body {
   stroke: #ccc;
   stroke-width: 1.5px;
 }
+
+.top {
+  margin-top: 60px !important;
+}
+
+.horizontal-overflow {
+  overflow-x: scroll;
+}
