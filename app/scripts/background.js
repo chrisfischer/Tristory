@@ -37,17 +37,22 @@ function addTitleToLimbo(tabId, url, fullTitle) {
 
 chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 
+	// for when updated gets called afterwards with the title
 	if (changeInfo.title) {
 		addTitleToLimbo(tab.id, tab.url, changeInfo.title);
 		return;
 	}
 
 	newUrl = changeInfo.url;
+
+	// we don't want to account for new tabs or our extension being opened
 	if (!newUrl || newUrl == 'chrome://newtab/' || newUrl.substring(0,16) == 'chrome-extension') {
 			return;
 	}
-	if (currentTabDoc && currentTabDoc['parent']) {
-		parentReferenced = findDocInBranch(newUrl, currentTabDoc['parent'])
+
+	// FOR THE BACK BUTTON, want to travel back up the tree
+	if (currentTabDoc && currentTabDoc.parent) {
+		parentReferenced = findDocInBranch(newUrl, currentTabDoc.parent)
 		if (parentReferenced) {
 				currentTabDoc = parentReferenced;
 				return; // its not null, there was a parent that we went back to, no need to add a new document
@@ -56,8 +61,10 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 
 	// TODO refractor this
 
-	// parent id 
-	// is the parent new
+	// if a tab was created, or if not, we want to reset FLAG_CREATED
+	FLAG_CREATED = false
+
+	// is the parent tab a 'chrome://newtab'
 	if (!currentTabDoc) {
 		// create new document to store
 		doc = {
@@ -69,10 +76,14 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 				'fullTitle': null
 		}
 		addNewStartingNode(doc);
+
+		// the parent was 'chrome://newtab' so we dont know the title yet
 		docLimbo.push(doc);
+
+		// this new tab was created from 'chrome://newtab' to its automatocally set
 		currentTabDoc = doc;
 	} else {
-		// update appropriate document
+		// update appropriate parent document to have child
 		doc = {
 				'tabId': updatedTabId,
 				'url': newUrl,
@@ -82,8 +93,18 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 				'fullTitle': null
 		}
 		addChild(doc);
-		docLimbo.push(doc);
-		if (updatedTabId == activeTabId) { //currentTabDoc.tabId
+
+		if (newUrl.includes(currentTabDoc.url)) {
+			// possibly a change of section in the path using #
+			doc.title = currentTabDoc.title
+			doc.fullTitle = currentTabDoc.fullTitle
+		} else {
+			// we don't know the title yet so add to limbo
+			docLimbo.push(doc);
+		}
+
+		if (updatedTabId == activeTabId) {
+			// only update the current tab doc if we are now using this new tab
 			currentTabDoc = doc;
 		}
 	}
@@ -105,12 +126,17 @@ function findDoc(targetId, targetUrl, arrOfDocs) {
 	console.log('find doc', targetUrl, arrOfDocs)
 	for (i = 0; i < arrOfDocs.length; i++) {
 		currDoc = arrOfDocs[i];
-		if (currDoc['tabId'] == targetId && currDoc['url'] == targetUrl) {
+		if (currDoc.tabId == targetId && currDoc.url == targetUrl) {
 				return currDoc;
-		} else if (currDoc['children'].length == 0) {
+		} else if (currDoc.children.length == 0) {
+				// reached the bottom of the tree
 				continue;
 		} else {
-				return findDoc(targetId, targetUrl, currDoc['children']);
+				doc_return = findDoc(targetId, targetUrl, currDoc.children);
+				if (!doc_return) {
+					continue;
+				}
+				return doc_return
 		}
 	}
 	return null;
@@ -135,6 +161,8 @@ function onActivateOrCreate(highlightInfo) {
 			currentTabDoc = null;
 		} else if (url.substring(0,16) == 'chrome-extension') {
 			//return;
+
+			// TODO maybe set to null??
 		} else if (FLAG_CREATED) {
 			// new tab was just created
 			FLAG_CREATED = false;
@@ -143,6 +171,7 @@ function onActivateOrCreate(highlightInfo) {
 			currentTabDoc = findDoc(id, url, urlDocs);
 			if (currentTabDoc) {
 				// idk maybe set title
+				//addTitleToLimbo(id, url, tab.titleh)
 			}
 		}
 		activeTabId = id
@@ -153,9 +182,35 @@ function onActivateOrCreate(highlightInfo) {
 chrome.tabs.onActivated.addListener(onActivateOrCreate);
 chrome.tabs.onCreated.addListener(function (tab) {
 	console.log('onCreated begin', FLAG_CREATED, tab);
+
+	// if we didn't just switch tabs or go to our extension
 	if (tab.url != 'chrome://newtab/' && tab.url.substring(0,16) != 'chrome-extension') {
 		FLAG_CREATED = true;		
 	}
-	
 	console.log('onCreated end', FLAG_CREATED)
 })
+
+
+
+/*
+Orderings for following links:
+	-Open link in current tab:
+		1. onUpdated
+
+	-Open link in new background tab:
+		1. onCreated
+		2. onUpdated
+
+	-Open link in new tab, ie: target='_blank'
+		1. onCreated
+		2. onActivated
+		3. onUpdated
+
+
+
+
+
+
+
+
+*/

@@ -4,7 +4,7 @@
     "description": "The name of the application"
   },
   "appDescription": {
-    "message": "My Chrome Extension",
+    "message": "View your history as a tree",
     "description": "The description of the application"
   }
 }
