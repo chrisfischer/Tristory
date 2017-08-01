@@ -50,7 +50,7 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 	newUrl = changeInfo.url;
 
 	// we don't want to account for new tabs or our extension being opened
-	if (!newUrl || newUrl == 'chrome://newtab/' || newUrl.substring(0,16) == 'chrome-extension') {
+	if (!newUrl || newUrl.substring(0,9) == 'chrome://' || newUrl.substring(0,16) == 'chrome-extension') {
 			return;
 	}
 
@@ -58,8 +58,17 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 	if (currentTabDoc && currentTabDoc.parent) {
 		parentReferenced = findDocInBranch(newUrl, currentTabDoc.parent)
 		if (parentReferenced) {
-				currentTabDoc = parentReferenced;
-				return; // its not null, there was a parent that we went back to, no need to add a new document
+			currentTabDoc = parentReferenced;
+			return; // its not null, there was a parent that we went back to, no need to add a new document
+		}
+	}
+
+	// FOR THE FORWARD BUTTON, want to travel down the tree
+	if (currentTabDoc && currentTabDoc.children) {
+		childReferenced = findDocInChildren(newUrl, currentTabDoc.children)
+		if (childReferenced) {
+			currentTabDoc = childReferenced;
+			return; // its not null, there was a child that we went foward to, no need to add a new document
 		}
 	}
 
@@ -129,24 +138,55 @@ function findDocInBranch(targetUrl, baseDoc) {
 	}
 }
 
+function findDocInChildren(targetUrl, arrOfDocs) {
+	/*
+	Depth first search to find url in children
+	*/
+	if (!arrOfDocs) {
+		return null
+	}
+
+	console.log('find doc in children', targetUrl, arrOfDocs)
+	for (i = 0; i < arrOfDocs.length; i++) {
+		currDoc = arrOfDocs[i];
+		if (currDoc.url == targetUrl) {
+			return currDoc;
+		} else if (!currDoc.children) {
+			// reached the bottom of the tree
+			continue;
+		} else {
+			doc_return = findDoc(targetUrl, currDoc.children);
+			if (!doc_return) {
+				continue;
+			}
+			return doc_return
+		}
+	}
+	return null;
+}
+
 function findDoc(targetId, targetUrl, arrOfDocs) {
 	/*
 	Depth first search to find arbitrary doc
 	*/
-	console.log('find doc', targetUrl, arrOfDocs)
+	if (!arrOfDocs) {
+		return null
+	}
+
+	console.log('find doc', targetId, targetUrl, arrOfDocs)
 	for (i = 0; i < arrOfDocs.length; i++) {
 		currDoc = arrOfDocs[i];
 		if (currDoc.tabId == targetId && currDoc.url == targetUrl) {
-				return currDoc;
-		} else if (currDoc.children.length == 0) {
-				// reached the bottom of the tree
-				continue;
+			return currDoc;
+		} else if (!currDoc.children) {
+			// reached the bottom of the tree
+			continue;
 		} else {
-				doc_return = findDoc(targetId, targetUrl, currDoc.children);
-				if (!doc_return) {
-					continue;
-				}
-				return doc_return
+			doc_return = findDoc(targetId, targetUrl, currDoc.children);
+			if (!doc_return) {
+				continue;
+			}
+			return doc_return
 		}
 	}
 	return null;
@@ -167,16 +207,16 @@ function onActivateOrCreate(highlightInfo) {
 		}
 		console.log('onSwitch begin', urlDocs, currentTabDoc, FLAG_CREATED);
 
-		if (url == 'chrome://newtab/') {
+		if (url.substring(0,9) == 'chrome://') {
 			currentTabDoc = null;
 		} else if (url.substring(0,16) == 'chrome-extension') {
 			//return;
 
 			// TODO maybe set to null??
 		} else if (FLAG_CREATED) {
-			// new tab was just created
+			// new tab was just created and we switched to it automatically
+			// still want the currentTabDoc to be the parent for onUpdated
 			FLAG_CREATED = false;
-			//return;
 		}	else {
 			currentTabDoc = findDoc(id, url, urlDocs);
 			if (currentTabDoc) {
@@ -194,7 +234,7 @@ chrome.tabs.onCreated.addListener(function (tab) {
 	console.log('onCreated begin', FLAG_CREATED, tab);
 
 	// if we didn't just switch tabs or go to our extension
-	if (tab.url != 'chrome://newtab/' && tab.url.substring(0,16) != 'chrome-extension') {
+	if (tab.url.substring(0,9) != 'chrome://' && tab.url.substring(0,16) != 'chrome-extension') {
 		FLAG_CREATED = true;		
 	}
 	console.log('onCreated end', FLAG_CREATED)
@@ -203,7 +243,7 @@ chrome.tabs.onCreated.addListener(function (tab) {
 
 
 /*
-Orderings for following links:
+Orderings for clicking links:
 	-Open link in current tab:
 		1. onUpdated
 

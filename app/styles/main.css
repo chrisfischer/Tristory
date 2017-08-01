@@ -23,9 +23,17 @@ body {
 }
 
 .top {
-  margin-top: 60px !important;
+  margin-top: 15px !important;
 }
 
-.horizontal-overflow {
-  overflow-x: scroll;
+.truncate {
+  width: 400px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-xs-2 {
+  margin-left: 15px;
+  margin-top: 3px;
 }

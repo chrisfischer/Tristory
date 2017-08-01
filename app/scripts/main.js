@@ -1,24 +1,23 @@
 var background = chrome.extension.getBackgroundPage()
 
-$.material.init()
+//$.material.init()
 
-
-IS_SHIFT_PRESSED = false
+IS_ALT_PRESSED = false
 function checkKeyPressed(e) {
 	// shift
-	if (e.keyCode == 16) {
-		IS_SHIFT_PRESSED = true 
+	if (e.keyCode == 18) {
+		IS_ALT_PRESSED = true 
 	}
-	console.log(e, IS_SHIFT_PRESSED)
+	console.log(e, IS_ALT_PRESSED)
 }
 
 function checkKeyUp(e) {
 	// shift
-	if (e.keyCode == 16) {
-		IS_SHIFT_PRESSED = false 
+	if (e.keyCode == 18) {
+		IS_ALT_PRESSED = false 
 	}
 	
-	console.log(e, IS_SHIFT_PRESSED)
+	console.log(e, IS_ALT_PRESSED)
 }
 document.onkeydown = checkKeyPressed;
 document.onkeyup = checkKeyUp;
@@ -51,9 +50,16 @@ function renderTree() {
 
 	if (background.urlDocs.length == 0) { return }
 
-	root = JSON.parse(JSON.stringify({'children': background.urlDocs,
-										'title': 'New Tab'}, 
-										['url', 'title', 'fullTitle', 'children']));
+	root = JSON.parse(JSON.stringify(
+		{
+			'children': background.urlDocs,
+		  'title': 'New Tab',
+		  'fullTitle': 'New Tab',
+		  'url': 'chrome://newtab'
+		}, 
+		['url', 'title', 'fullTitle', 'children', 'tabId']
+	));
+
 	root.x0 = height / 2;
 	root.y0 = 0;
 
@@ -167,7 +173,10 @@ function renderTree() {
 
 	// Toggle children on click.
 	function click(d) {
-		if (IS_SHIFT_PRESSED) {
+		if (IS_ALT_PRESSED) {
+			// Open that url and set location in tree to match
+			IS_ALT_PRESSED = false // dont want it to be considered pressed anymore
+			background.currentTabDoc = background.findDoc(d.tabId, d.url, background.urlDocs)
 			chrome.tabs.create({url: d.url});
 			return;
 		}
@@ -183,14 +192,21 @@ function renderTree() {
 
 	function hoverOn(d) {
 		divFullTitle = document.getElementById('fullTitle');
-		if (d.url) { // changed url
-			divFullTitle.textContent = d.url // changed url
+		divFullUrl = document.getElementById('fullUrl');
+		if (d.fullTitle) {
+			divFullTitle.textContent = d.fullTitle
+		}
+		if (d.url) { 
+			divFullUrl.textContent = d.url
 		}
 	}
 
 	function hoverOff(d) {
 		divFullTitle = document.getElementById('fullTitle');
 		divFullTitle.textContent = '\u00A0';
+
+		divFullUrl = document.getElementById('fullUrl');
+		divFullUrl.textContent = '\u00A0';
 	}
 
 	// expand all

@@ -1,18 +1,10 @@
 <!doctype html>
-<!--
- This page is shown when the extension button is clicked, because the
- "browser_action" field in manifest.json contains the "default_popup" key with
- value "popup.html".
- -->
+
 <html>
   <head>
     <title>Tristory</title>
     <link href="styles/main.css" rel="stylesheet">
     <link href="styles/bootstrap.min.css" rel="stylesheet">
-    <link href="styles/jquery.dropdown.css" rel="stylesheet">
-    <link href="materialDesign/css/bootstrap-material-design.min.css" rel="stylesheet">
-    <link href="materialDesign/css/ripples.min.css" rel="stylesheet">
-
 
     <!--
       - JavaScript and HTML must be in separate files: see our Content Security
@@ -20,68 +12,19 @@
       -
       - [1]: https://developer.chrome.com/extensions/contentSecurityPolicy
      -->
-
     <script src="scripts/d3.v3.min.js" charset="utf-8"></script>
     <script src="scripts/jquery-3.2.1.min.js"></script>
-    <script src="materialDesign/js/material.min.js"></script>
-    <script src="materialDesign/js/ripples.min.js"></script>
-    <script src="scripts/jquery.dropdown.js"></script>
     <script src="scripts/main.js"></script>
 
   </head>
   <body>
-    <div class="navbar navbar-info navbar-fixed-top">
-      <div class="container-fluid">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-material-light-blue-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand">Brand</a>
-        </div>
-        <div class="navbar-collapse collapse navbar-material-light-blue-collapse">
-          <ul class="nav navbar-nav">
-            <li class="active"><a>Active</a></li>
-            <li><a>Link</a></li>
-            <li class="dropdown">
-              <a href="main.html" data-target="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown
-                <b class="caret"></b></a>
-              <ul class="dropdown-menu">
-                <li><a>Action</a></li>
-                <li><a>Another action</a></li>
-                <li><a>Something else here</a></li>
-                <li class="divider"></li>
-                <li class="dropdown-header">Dropdown header</li>
-                <li><a>Separated link</a></li>
-                <li><a>One more separated link</a></li>
-              </ul>
-            </li>
-          </ul>
-          <form class="navbar-form navbar-left">
-            <div class="form-group is-empty">
-              <input type="text" class="form-control col-sm-8" placeholder="Search">
-            </div>
-          </form>
-          <ul class="nav navbar-nav navbar-right">
-            <li><a>Link</a></li>
-            <li class="dropdown">
-              <a href="index.html" data-target="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">Dropdown
-                <b class="caret"></b><div class="ripple-container"></div></a>
-              <ul class="dropdown-menu">
-                <li><a>Action</a></li>
-                <li><a>Another action</a></li>
-                <li><a>Something else here</a></li>
-                <li class="divider"></li>
-                <li><a>Separated link</a></li>
-              </ul>
-            </li>
-          </ul>
-        </div>
+    <nav class="navbar navbar-fixed-top top">
+      <a id="expandAll" class="col-xs-2 btn btn-raised btn-success">Expand All</a>
+      <div class="col-md-6">
+        <div id="fullTitle">&nbsp;</div>
+        <div class="truncate" id="fullUrl">&nbsp;</div>
       </div>
-    </div>
-    <a id="expandAll" class="btn btn-raised btn-success top">Expand All</a>
-    <div id="fullTitle">&nbsp;</div>
-    <tree class="horizontal-overflow"></tree>
+    </nav>
+    <tree class=""></tree>
   </body>
 </html>
