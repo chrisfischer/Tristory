@@ -183,7 +183,8 @@ function renderTree() {
 		if (IS_ALT_PRESSED) {
 			// Open that url and set location in tree to match
 			IS_ALT_PRESSED = false // dont want it to be considered pressed anymore
-			background.currentTabDoc = background.findDoc(background.urlDocs, uid=d.uid)
+			console.log(d, d.uid)
+			background.currentTabDoc = background.findDoc(background.urlDocs, null, null, d.uid)
 			chrome.tabs.create({url: d.url});
 			return;
 		}

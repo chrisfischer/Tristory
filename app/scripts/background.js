@@ -73,7 +73,7 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 
 	// FOR THE FORWARD BUTTON, want to travel down the tree
 	if (currentTabDoc && currentTabDoc.children) {
-		childReferenced = findDocInChildren(newUrl, currentTabDoc.children)
+		childReferenced = findDoc(currentTabDoc.children, null, newUrl, null)
 		if (childReferenced) {
 			currentTabDoc = childReferenced;
 			return; // its not null, there was a child that we went foward to, no need to add a new document
@@ -148,33 +148,33 @@ function findDocInParents(targetUrl, baseDoc) {
 	}
 }
 
-function findDoc(arrOfDocs, targetId=null, targetUrl=null, uid=null) {
+function findDoc(arrOfDocs, targetTabId, targetUrl, targetUID) {
 	/*
 	Depth first search to find arbitrary doc
 	*/
 
 	// if all search targets are null, return
-	if (targetId == null && targetUrl == null && uid == null) { return null }
+	if (targetTabId == null && targetUrl == null && targetUID == null) { return null }
 
 	if (!arrOfDocs) { return null }
 
-	console.log('find doc', targetId, targetUrl, uid, arrOfDocs)
+	console.log('find doc', targetTabId, targetUrl, targetUID, arrOfDocs)
 	for (i = 0; i < arrOfDocs.length; i++) {
 		currDoc = arrOfDocs[i];
-		if (targetId && targetUrl && !uid && currDoc.tabId == targetId && currDoc.url == targetUrl) {
-			// searching by targetId and target url
+		if (targetTabId && targetUrl && !targetUID && currDoc.tabId == targetTabId && currDoc.url == targetUrl) {
+			// searching by targetTabId and target url
 			return currDoc;
-		} else if (!targetId && targetUrl && !uid && targetUrl == currDoc.url) {
+		} else if (!targetTabId && targetUrl && !targetUID && targetUrl == currDoc.url) {
 			// searching by target url
 			return currDoc
-		} else if (!targetId && !targetUrl && uid && uid == currDoc.uid) {
-			// searching by uid
+		} else if (!targetTabId && !targetUrl && targetUID && targetUID == currDoc.uid) {
+			// searching by targetUID
 			return currDoc
 		} else if (!currDoc.children) {
 			// reached the bottom of the tree
 			continue;
 		} else {
-			doc_return = findDoc(currDoc.children, targetId=targetId, targetUrl=targetUrl, uid=uid);
+			doc_return = findDoc(currDoc.children, targetTabId, targetUrl, targetUID);
 			if (!doc_return) {
 				continue;
 			}
@@ -212,7 +212,7 @@ function onActivateOrCreate(highlightInfo) {
 			// still want the currentTabDoc to be the parent for onUpdated
 			FLAG_CREATED = false;
 		}	else {
-			currentTabDoc = findDoc(urlDocs, targetId=id, targetUrl=url);
+			currentTabDoc = findDoc(urlDocs, id, url, null);
 			if (currentTabDoc) {
 				// idk maybe set title
 				//addTitleToLimbo(id, url, tab.titleh)
