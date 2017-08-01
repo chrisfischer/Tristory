@@ -1,29 +1,32 @@
-var background = chrome.extension.getBackgroundPage()
+var background = chrome.extension.getBackgroundPage();
 
-//$.material.init()
-
-IS_ALT_PRESSED = false
+IS_ALT_PRESSED = false;
 function checkKeyPressed(e) {
 	// shift
 	if (e.keyCode == 18) {
-		IS_ALT_PRESSED = true 
+		IS_ALT_PRESSED = true;
 	}
-	console.log(e, IS_ALT_PRESSED)
+	console.log(e, IS_ALT_PRESSED);
 }
 
 function checkKeyUp(e) {
 	// shift
 	if (e.keyCode == 18) {
-		IS_ALT_PRESSED = false 
+		IS_ALT_PRESSED = false;
 	}
 	
-	console.log(e, IS_ALT_PRESSED)
+	console.log(e, IS_ALT_PRESSED);
 }
 document.onkeydown = checkKeyPressed;
 document.onkeyup = checkKeyUp;
 
+$(document).ready(function(){
+    $(this).scrollLeft(0);
+});
+
 document.addEventListener('DOMContentLoaded', function() {
-	renderTree()
+	console.log('loaded')
+	renderTree();
 });
 
 function renderTree() {
@@ -57,7 +60,7 @@ function renderTree() {
 		  'fullTitle': 'New Tab',
 		  'url': 'chrome://newtab'
 		}, 
-		['url', 'title', 'fullTitle', 'children', 'tabId']
+		['url', 'title', 'fullTitle', 'children', 'uid']
 	));
 
 	root.x0 = height / 2;
@@ -92,6 +95,7 @@ function renderTree() {
 		// Enter any new nodes at the parent's previous position.
 		var nodeEnter = node.enter().append("g")
 				.attr("class", "node")
+				.attr("id", function(d) { return d.uid})
 				.attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
 				.on("click", click)
 				.on("mouseover", hoverOn)
@@ -112,7 +116,10 @@ function renderTree() {
 						return d.url.substring(0,20) + '...'
 					}
 				})
-				.style("fill-opacity", 1e-6);
+				.style("fill-opacity", 1e-6)
+				.style("fill", function(d) {
+					if (d.uid == background.uidToLightUp) { return 'red' }
+				})
 
 		// Transition nodes to their new position.
 		var nodeUpdate = node.transition()
@@ -176,7 +183,7 @@ function renderTree() {
 		if (IS_ALT_PRESSED) {
 			// Open that url and set location in tree to match
 			IS_ALT_PRESSED = false // dont want it to be considered pressed anymore
-			background.currentTabDoc = background.findDoc(d.tabId, d.url, background.urlDocs)
+			background.currentTabDoc = background.findDoc(background.urlDocs, uid=d.uid)
 			chrome.tabs.create({url: d.url});
 			return;
 		}
@@ -194,22 +201,22 @@ function renderTree() {
 		divFullTitle = document.getElementById('fullTitle');
 		divFullUrl = document.getElementById('fullUrl');
 		if (d.fullTitle) {
-			divFullTitle.textContent = d.fullTitle
+			divFullTitle.textContent = d.fullTitle;
 		}
 		if (d.url) { 
-			divFullUrl.textContent = d.url
+			divFullUrl.textContent = d.url;
 		}
 	}
 
 	function hoverOff(d) {
 		divFullTitle = document.getElementById('fullTitle');
-		divFullTitle.textContent = '\u00A0';
+		divFullTitle.textContent = ''; //'\u00A0';
 
 		divFullUrl = document.getElementById('fullUrl');
-		divFullUrl.textContent = '\u00A0';
+		divFullUrl.textContent = ''; //'\u00A0';
 	}
 
-	// expand all
+	// expand/collapse all utils
 
 	btn = document.getElementById('expandAll')
 	btn.addEventListener('click', function() {
@@ -218,11 +225,11 @@ function renderTree() {
 
 	function toggleExpand(btn) {
 		if (btn.textContent == 'Expand All') {
-			expandAll()
-			btn.textContent = 'Collapse All'
+			expandAll();
+			btn.textContent = 'Collapse All';
 		} else {
-			collapseAll()
-			btn.textContent = 'Expand All'
+			collapseAll();
+			btn.textContent = 'Expand All';
 		}
 	}
 
@@ -245,5 +252,7 @@ function renderTree() {
 	  root.children.forEach(collapse);
 	  //collapse(root);
 	  update(root);
+	  $('body, hmtl').animate({ scrollLeft: 0}, 500); // scroll all the way left
 	}
+
 }

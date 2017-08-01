@@ -27,13 +27,17 @@ body {
 }
 
 .truncate {
-  width: 400px;
+  width: 80%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.col-xs-2 {
-  margin-left: 15px;
+#expandAll {
   margin-top: 3px;
+  width: 150px;
+}
+
+.col-md-1 {
+  width: 170px !important;
 }

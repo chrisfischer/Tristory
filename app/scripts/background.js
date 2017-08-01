@@ -1,8 +1,10 @@
 urlDocs = [];
 docLimbo = []; // list of documents that have no title
 currentTabDoc = null; // if null means new tab
+											// currentTabDoc is the document that we would want to add a child to at anytime
 
-activeTabId = -1
+activeTabId = -1 // tab id of the current tab, ALWAYS up to date
+uidToLightUp = -1 // uid to mark as current on d3 tree
 
 FLAG_CREATED = false; // turns true if a tab was just created
 
@@ -17,7 +19,7 @@ function addChild(child) {
 		if (currentTabDoc.children) {
 			currentTabDoc.children.push(child);
 		} else {
-			currentTabDoc.children = [child]
+			currentTabDoc.children = [child];
 		}
 	}
 }
@@ -39,6 +41,12 @@ function addTitleToLimbo(tabId, url, fullTitle) {
 	}
 }
 
+_counter = -1
+function _getUID() {
+	_counter++;
+	return _counter
+}
+
 chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 
 	// for when updated gets called afterwards with the title
@@ -56,7 +64,7 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 
 	// FOR THE BACK BUTTON, want to travel back up the tree
 	if (currentTabDoc && currentTabDoc.parent) {
-		parentReferenced = findDocInBranch(newUrl, currentTabDoc.parent)
+		parentReferenced = findDocInParents(newUrl, currentTabDoc.parent)
 		if (parentReferenced) {
 			currentTabDoc = parentReferenced;
 			return; // its not null, there was a parent that we went back to, no need to add a new document
@@ -75,7 +83,7 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 	// TODO refractor this
 
 	// if a tab was created, or if not, we want to reset FLAG_CREATED
-	FLAG_CREATED = false
+	FLAG_CREATED = false;
 
 	// is the parent tab a 'chrome://newtab'
 	if (!currentTabDoc) {
@@ -86,7 +94,8 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 				'children': null,
 				'parent': null,
 				'title': null,
-				'fullTitle': null
+				'fullTitle': null,
+				'uid': _getUID()
 		}
 		addNewStartingNode(doc);
 
@@ -103,14 +112,15 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 				'children': null,
 				'parent': currentTabDoc,
 				'title': null,
-				'fullTitle': null
+				'fullTitle': null,
+				'uid': _getUID()
 		}
 		addChild(doc);
 
 		if (newUrl.includes('#') && newUrl.includes(currentTabDoc.url)) {
 			// possibly a change of section in the path using #
-			doc.title = currentTabDoc.title
-			doc.fullTitle = currentTabDoc.fullTitle
+			doc.title = currentTabDoc.title;
+			doc.fullTitle = currentTabDoc.fullTitle;
 		} else {
 			// we don't know the title yet so add to limbo
 			docLimbo.push(doc);
@@ -124,7 +134,7 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 	console.log('onUpdated', urlDocs, currentTabDoc);
 }); 
 
-function findDocInBranch(targetUrl, baseDoc) {
+function findDocInParents(targetUrl, baseDoc) {
 	/*
 	Search upwards to find matching parent
 	*/
@@ -132,61 +142,43 @@ function findDocInBranch(targetUrl, baseDoc) {
 	if (baseDoc.url == targetUrl) {
 		return baseDoc;
 	} else if (baseDoc.parent) {
-		return findDocInBranch(targetUrl, baseDoc.parent);
+		return findDocInParents(targetUrl, baseDoc.parent);
 	} else {
 		return null;
 	}
 }
 
-function findDocInChildren(targetUrl, arrOfDocs) {
-	/*
-	Depth first search to find url in children
-	*/
-	if (!arrOfDocs) {
-		return null
-	}
-
-	console.log('find doc in children', targetUrl, arrOfDocs)
-	for (i = 0; i < arrOfDocs.length; i++) {
-		currDoc = arrOfDocs[i];
-		if (currDoc.url == targetUrl) {
-			return currDoc;
-		} else if (!currDoc.children) {
-			// reached the bottom of the tree
-			continue;
-		} else {
-			doc_return = findDoc(targetUrl, currDoc.children);
-			if (!doc_return) {
-				continue;
-			}
-			return doc_return
-		}
-	}
-	return null;
-}
-
-function findDoc(targetId, targetUrl, arrOfDocs) {
+function findDoc(arrOfDocs, targetId=null, targetUrl=null, uid=null) {
 	/*
 	Depth first search to find arbitrary doc
 	*/
-	if (!arrOfDocs) {
-		return null
-	}
 
-	console.log('find doc', targetId, targetUrl, arrOfDocs)
+	// if all search targets are null, return
+	if (targetId == null && targetUrl == null && uid == null) { return null }
+
+	if (!arrOfDocs) { return null }
+
+	console.log('find doc', targetId, targetUrl, uid, arrOfDocs)
 	for (i = 0; i < arrOfDocs.length; i++) {
 		currDoc = arrOfDocs[i];
-		if (currDoc.tabId == targetId && currDoc.url == targetUrl) {
+		if (targetId && targetUrl && !uid && currDoc.tabId == targetId && currDoc.url == targetUrl) {
+			// searching by targetId and target url
 			return currDoc;
+		} else if (!targetId && targetUrl && !uid && targetUrl == currDoc.url) {
+			// searching by target url
+			return currDoc
+		} else if (!targetId && !targetUrl && uid && uid == currDoc.uid) {
+			// searching by uid
+			return currDoc
 		} else if (!currDoc.children) {
 			// reached the bottom of the tree
 			continue;
 		} else {
-			doc_return = findDoc(targetId, targetUrl, currDoc.children);
+			doc_return = findDoc(currDoc.children, targetId=targetId, targetUrl=targetUrl, uid=uid);
 			if (!doc_return) {
 				continue;
 			}
-			return doc_return
+			return doc_return;
 		}
 	}
 	return null;
@@ -210,21 +202,23 @@ function onActivateOrCreate(highlightInfo) {
 		if (url.substring(0,9) == 'chrome://') {
 			currentTabDoc = null;
 		} else if (url.substring(0,16) == 'chrome-extension') {
-			//return;
-
+			if (currentTabDoc) {
+				uidToLightUp = currentTabDoc.uid
+				currentTabDoc = null;
+			}
 			// TODO maybe set to null??
 		} else if (FLAG_CREATED) {
 			// new tab was just created and we switched to it automatically
 			// still want the currentTabDoc to be the parent for onUpdated
 			FLAG_CREATED = false;
 		}	else {
-			currentTabDoc = findDoc(id, url, urlDocs);
+			currentTabDoc = findDoc(urlDocs, targetId=id, targetUrl=url);
 			if (currentTabDoc) {
 				// idk maybe set title
 				//addTitleToLimbo(id, url, tab.titleh)
 			}
 		}
-		activeTabId = id
+		activeTabId = id;
 		console.log('onSwitch end', urlDocs, currentTabDoc, FLAG_CREATED);
 	});
 }
@@ -237,7 +231,7 @@ chrome.tabs.onCreated.addListener(function (tab) {
 	if (tab.url.substring(0,9) != 'chrome://' && tab.url.substring(0,16) != 'chrome-extension') {
 		FLAG_CREATED = true;		
 	}
-	console.log('onCreated end', FLAG_CREATED)
+	console.log('onCreated end', FLAG_CREATED);
 })
 
 
