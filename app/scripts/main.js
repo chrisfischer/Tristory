@@ -247,11 +247,14 @@ function renderTree() {
 
 	function expandCollapseAll(btn) {
 		if (btn.textContent == 'Expand All') {
-			expandAll();
 			btn.textContent = 'Collapse All';
+			// expand all nodes
+			expand(root)
 		} else {
-			collapseAll();
 			btn.textContent = 'Expand All';
+			// collapse all but the first node
+			root.children.forEach(toggleAll)
+			$('body, hmtl').animate({ scrollLeft: 0}, 500); // scroll all the way left
 		}
 		update(root)
 	}
@@ -265,15 +268,6 @@ function renderTree() {
     if (children) {
       children.forEach(expand);
     }
-	}
-
-	function expandAll(){
-	  expand(root);
-	}
-
-	function collapseAll(){
-	  root.children.forEach(toggleAll);
-	  $('body, hmtl').animate({ scrollLeft: 0}, 500); // scroll all the way left
 	}
 
 	function expandToSelected() {
