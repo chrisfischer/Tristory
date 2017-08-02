@@ -1,12 +1,14 @@
-urlDocs = [];
-docLimbo = []; // list of documents that have no title
-currentTabDoc = null; // if null means new tab
+'use strict';
+
+var urlDocs = [];
+var docLimbo = []; // list of documents that have no title
+var currentTabDoc = null; // if null means new tab
 											// currentTabDoc is the document that we would want to add a child to at anytime
 
-activeTabId = -1 // tab id of the current tab, ALWAYS up to date
-uidToLightUp = -1 // uid to mark as current on d3 tree
+var activeTabId = -1 // tab id of the current tab, ALWAYS up to date
+var uidToLightUp = -1 // uid to mark as current on d3 tree
 
-FLAG_CREATED = false; // turns true if a tab was just created
+var FLAG_CREATED = false; // turns true if a tab was just created
 
 function addNewStartingNode(doc) {
 	if (doc) {
@@ -25,26 +27,27 @@ function addChild(child) {
 }
 
 function addTitleToLimbo(tabId, url, fullTitle) {
+	var title = '';
 	if (fullTitle.length > 20) {
 		title = fullTitle.substring(0,20) + '...';
 	} else {
-		title = fullTitle
+		title = fullTitle;
 	}
 
-	for (i = 0; i < docLimbo.length; i++) {
-		currDoc = docLimbo[i];
+	for (var i = 0; i < docLimbo.length; i++) {
+		var currDoc = docLimbo[i];
 		if (currDoc.tabId == tabId && currDoc.url == url) {
 			currDoc.title = title;
-			currDoc.fullTitle = fullTitle
+			currDoc.fullTitle = fullTitle;
 			docLimbo.splice(i, 1);
 		}
 	}
 }
 
-_counter = -1
+var _counter = -1
 function _getUID() {
 	_counter++;
-	return _counter
+	return _counter;
 }
 
 chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
@@ -55,7 +58,7 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 		return;
 	}
 
-	newUrl = changeInfo.url;
+	var newUrl = changeInfo.url;
 
 	// we don't want to account for new tabs or our extension being opened
 	if (!newUrl || newUrl.substring(0,9) == 'chrome://' || newUrl.substring(0,16) == 'chrome-extension') {
@@ -64,7 +67,7 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 
 	// FOR THE BACK BUTTON, want to travel back up the tree
 	if (currentTabDoc && currentTabDoc.parent) {
-		parentReferenced = findDocInParents(newUrl, currentTabDoc.parent)
+		var parentReferenced = findDocInParents(newUrl, currentTabDoc.parent)
 		if (parentReferenced) {
 			currentTabDoc = parentReferenced;
 			return; // its not null, there was a parent that we went back to, no need to add a new document
@@ -73,7 +76,7 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 
 	// FOR THE FORWARD BUTTON, want to travel down the tree
 	if (currentTabDoc && currentTabDoc.children) {
-		childReferenced = findDoc(currentTabDoc.children, null, newUrl, null)
+		var childReferenced = findDoc(currentTabDoc.children, null, newUrl, null)
 		if (childReferenced) {
 			currentTabDoc = childReferenced;
 			return; // its not null, there was a child that we went foward to, no need to add a new document
@@ -88,7 +91,7 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 	// is the parent tab a 'chrome://newtab'
 	if (!currentTabDoc) {
 		// create new document to store
-		doc = {
+		var doc = {
 				'tabId': updatedTabId,
 				'url': newUrl,
 				'children': null,
@@ -96,7 +99,7 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 				'title': null,
 				'fullTitle': null,
 				'uid': _getUID()
-		}
+		};
 		addNewStartingNode(doc);
 
 		// the parent was 'chrome://newtab' so we dont know the title yet
@@ -106,7 +109,7 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 		currentTabDoc = doc;
 	} else {
 		// update appropriate parent document to have child
-		doc = {
+		var doc = {
 				'tabId': updatedTabId,
 				'url': newUrl,
 				'children': null,
@@ -114,7 +117,7 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 				'title': null,
 				'fullTitle': null,
 				'uid': _getUID()
-		}
+		};
 		addChild(doc);
 
 		if (newUrl.includes('#') && newUrl.includes(currentTabDoc.url)) {
@@ -153,34 +156,44 @@ function findDoc(arrOfDocs, targetTabId, targetUrl, targetUID) {
 	Depth first search to find arbitrary doc
 	*/
 
+	// TODO refractor this logic mess
+
 	// if all search targets are null, return
 	if (targetTabId == null && targetUrl == null && targetUID == null) { return null }
 
 	if (!arrOfDocs) { return null }
 
-	console.log('find doc', targetTabId, targetUrl, targetUID, arrOfDocs)
-	for (i = 0; i < arrOfDocs.length; i++) {
-		currDoc = arrOfDocs[i];
+	console.log('find doc', targetTabId, targetUrl, targetUID, arrOfDocs);
+	for (var i = 0; i < arrOfDocs.length; i++) {
+		var currDoc = arrOfDocs[i];
+		console.log("start new currDoc", currDoc, arrOfDocs);
 		if (targetTabId && targetUrl && !targetUID && currDoc.tabId == targetTabId && currDoc.url == targetUrl) {
 			// searching by targetTabId and target url
+			console.log("matched", currDoc);
 			return currDoc;
 		} else if (!targetTabId && targetUrl && !targetUID && targetUrl == currDoc.url) {
 			// searching by target url
-			return currDoc
+			return currDoc;
 		} else if (!targetTabId && !targetUrl && targetUID && targetUID == currDoc.uid) {
 			// searching by targetUID
-			return currDoc
+			return currDoc;
 		} else if (!currDoc.children) {
 			// reached the bottom of the tree
+			console.log("reached bottom", currDoc, arrOfDocs);
 			continue;
 		} else {
-			doc_return = findDoc(currDoc.children, targetTabId, targetUrl, targetUID);
+			var doc_return = findDoc(currDoc.children, targetTabId, targetUrl, targetUID);
 			if (!doc_return) {
+				console.log("doc_return is null", currDoc, doc_return, arrOfDocs)
 				continue;
+			} else {
+				console.log(currDoc, doc_return)
+				return doc_return;
 			}
-			return doc_return;
+			
 		}
 	}
+	console.log("finished, returned null", arrOfDocs)
 	return null;
 }
 
@@ -203,7 +216,7 @@ function onActivateOrCreate(highlightInfo) {
 			currentTabDoc = null;
 		} else if (url.substring(0,16) == 'chrome-extension') {
 			if (currentTabDoc) {
-				uidToLightUp = currentTabDoc.uid
+				uidToLightUp = currentTabDoc.uid;
 				currentTabDoc = null;
 			}
 			// TODO maybe set to null??

@@ -1,6 +1,8 @@
+'use strict'
+
 var background = chrome.extension.getBackgroundPage();
 
-IS_ALT_PRESSED = false;
+var IS_ALT_PRESSED = false;
 function checkKeyPressed(e) {
 	// shift
 	if (e.keyCode == 18) {
@@ -8,7 +10,6 @@ function checkKeyPressed(e) {
 	}
 	console.log(e, IS_ALT_PRESSED);
 }
-
 function checkKeyUp(e) {
 	// shift
 	if (e.keyCode == 18) {
@@ -20,20 +21,20 @@ function checkKeyUp(e) {
 document.onkeydown = checkKeyPressed;
 document.onkeyup = checkKeyUp;
 
+// scroll all the way left on refresh
 $(document).ready(function(){
     $(this).scrollLeft(0);
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-	console.log('loaded')
 	renderTree();
 });
 
 function renderTree() {
 
 	var margin = {top: 20, right: 120, bottom: 20, left: 120},
-			width = 2000 //960 - margin.right - margin.left,
-			height = 850 - margin.top - margin.bottom;
+		width = 2000, //960 - margin.right - margin.left,
+		height = 850 - margin.top - margin.bottom;
 
 	var i = 0,
 			duration = 750,
@@ -183,7 +184,6 @@ function renderTree() {
 		if (IS_ALT_PRESSED) {
 			// Open that url and set location in tree to match
 			IS_ALT_PRESSED = false // dont want it to be considered pressed anymore
-			console.log(d, d.uid)
 			background.currentTabDoc = background.findDoc(background.urlDocs, null, null, d.uid)
 			chrome.tabs.create({url: d.url});
 			return;
@@ -199,8 +199,8 @@ function renderTree() {
 	}
 
 	function hoverOn(d) {
-		divFullTitle = document.getElementById('fullTitle');
-		divFullUrl = document.getElementById('fullUrl');
+		var divFullTitle = document.getElementById('fullTitle');
+		var divFullUrl = document.getElementById('fullUrl');
 		if (d.fullTitle) {
 			divFullTitle.textContent = d.fullTitle;
 		}
@@ -210,16 +210,15 @@ function renderTree() {
 	}
 
 	function hoverOff(d) {
-		divFullTitle = document.getElementById('fullTitle');
+		var divFullTitle = document.getElementById('fullTitle');
+		var divFullUrl = document.getElementById('fullUrl');
 		divFullTitle.textContent = ''; //'\u00A0';
-
-		divFullUrl = document.getElementById('fullUrl');
 		divFullUrl.textContent = ''; //'\u00A0';
 	}
 
 	// expand/collapse all utils
 
-	btn = document.getElementById('expandAll')
+	var btn = document.getElementById('expandAll')
 	btn.addEventListener('click', function() {
 		toggleExpand(btn)
 	});
@@ -235,13 +234,14 @@ function renderTree() {
 	}
 
 	function expand(d){   
-    var children = (d.children)?d.children:d._children;
-    if (d._children) {        
-        d.children = d._children;
-        d._children = null;       
-    }
-    if(children)
-      children.forEach(expand);
+    	var children = (d.children)?d.children:d._children;
+    	if (d._children) {        
+    	    d.children = d._children;
+    	    d._children = null;       
+    	}
+    	if (children) {
+    	  children.forEach(expand);
+    	}
 	}
 
 	function expandAll(){
