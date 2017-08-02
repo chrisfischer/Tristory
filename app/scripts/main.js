@@ -54,19 +54,17 @@ function renderTree() {
 
 	if (background.urlDocs.length == 0) { return }
 
-	root = JSON.parse(JSON.stringify(
-		{
-			'children': background.urlDocs,
+	var docs = JSON.parse(JSON.stringify(background.urlDocs, ['url', 'title', 'fullTitle', 'children', 'uid']))
+	root = {
+			'children': docs,
 		  'title': 'New Tab',
 		  'fullTitle': 'New Tab',
 		  'url': 'chrome://newtab'
-		}, 
-		['url', 'title', 'fullTitle', 'children', 'uid']
-	));
+		}
 
 	root.x0 = height / 2;
 	root.y0 = 0;
-
+	/*
 	function collapse(d) {
 		if (d.children) {
 			d._children = d.children;
@@ -74,9 +72,22 @@ function renderTree() {
 			d.children = null;
 		}
 	}
+	*/
+	function toggleAll(d) {
+    if (d.children) {
+      d.children.forEach(toggleAll);
+      toggle(d);
+    }
+  }
 
-	root.children.forEach(collapse);
-	update(root);
+	//root.children.forEach(collapse);
+	//collapse(root)
+
+	root.children.forEach(toggleAll)
+	expandToSelected()
+	update(root)
+
+	//update(root);
 
 	d3.select(self.frameElement).style("height", "800px");
 
@@ -119,7 +130,7 @@ function renderTree() {
 				})
 				.style("fill-opacity", 1e-6)
 				.style("fill", function(d) {
-					if (d.uid == background.uidToLightUp) { return 'red' }
+					if (d.uid == background.docToLightUp.uid) { return 'red' }
 				})
 
 		// Transition nodes to their new position.
@@ -216,14 +227,25 @@ function renderTree() {
 		divFullUrl.textContent = ''; //'\u00A0';
 	}
 
+	// Toggle children.
+	function toggle(d) {
+	  if (d.children) {
+	    d._children = d.children;
+	    d.children = null;
+	  } else {
+	    d.children = d._children;
+	    d._children = null;
+	  }
+	}
+
 	// expand/collapse all utils
 
 	var btn = document.getElementById('expandAll')
 	btn.addEventListener('click', function() {
-		toggleExpand(btn)
+		expandCollapseAll(btn)
 	});
 
-	function toggleExpand(btn) {
+	function expandCollapseAll(btn) {
 		if (btn.textContent == 'Expand All') {
 			expandAll();
 			btn.textContent = 'Collapse All';
@@ -231,29 +253,54 @@ function renderTree() {
 			collapseAll();
 			btn.textContent = 'Expand All';
 		}
+		update(root)
 	}
 
 	function expand(d){   
-    	var children = (d.children)?d.children:d._children;
-    	if (d._children) {        
-    	    d.children = d._children;
-    	    d._children = null;       
-    	}
-    	if (children) {
-    	  children.forEach(expand);
-    	}
+    var children = (d.children)?d.children:d._children;
+    if (d._children) {        
+        d.children = d._children;
+        d._children = null;       
+    }
+    if (children) {
+      children.forEach(expand);
+    }
 	}
 
 	function expandAll(){
-	  expand(root); 
-	  update(root);
+	  expand(root);
 	}
 
 	function collapseAll(){
-	  root.children.forEach(collapse);
-	  //collapse(root);
-	  update(root);
+	  root.children.forEach(toggleAll);
 	  $('body, hmtl').animate({ scrollLeft: 0}, 500); // scroll all the way left
+	}
+
+	function expandToSelected() {
+		var steps = []
+		function followParents(d) {
+			console.log('follow', d)
+			steps.push(d.uid)
+			if (d.parent) {
+				followParents(d.parent);
+			}
+		}
+
+		followParents(background.docToLightUp); // get steps
+		console.log(steps, root)
+
+		var lastUsedDoc = root;
+		for (var i = 0; i < steps.length; i++) {
+			var step = steps[steps.length - 1 - i]; // they are in reverse order
+			for (var c = 0; c < lastUsedDoc.children.length; c++) {
+				var d = lastUsedDoc.children[c]
+				if (d.uid == step) {
+					lastUsedDoc = d;
+					toggle(lastUsedDoc);
+					break;
+				}
+			}
+		}
 	}
 
 }

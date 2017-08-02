@@ -6,7 +6,7 @@ var currentTabDoc = null; // if null means new tab
 											// currentTabDoc is the document that we would want to add a child to at anytime
 
 var activeTabId = -1 // tab id of the current tab, ALWAYS up to date
-var uidToLightUp = -1 // uid to mark as current on d3 tree
+var docToLightUp = null // doc to mark as current on d3 tree
 
 var FLAG_CREATED = false; // turns true if a tab was just created
 
@@ -216,7 +216,7 @@ function onActivateOrCreate(highlightInfo) {
 			currentTabDoc = null;
 		} else if (url.substring(0,16) == 'chrome-extension') {
 			if (currentTabDoc) {
-				uidToLightUp = currentTabDoc.uid;
+				docToLightUp = currentTabDoc;
 				currentTabDoc = null;
 			}
 			// TODO maybe set to null??
