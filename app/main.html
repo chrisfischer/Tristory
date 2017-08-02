@@ -14,19 +14,32 @@
      -->
     <script src="scripts/d3.v3.min.js" charset="utf-8"></script>
     <script src="scripts/jquery-3.2.1.min.js"></script>
+    <script src="scripts/search.js"></script>
     <script src="scripts/main.js"></script>
 
   </head>
   <body>
     <nav class="navbar navbar-fixed-top top">
+      <div class="col-md-4">
+        <div id="custom-search-input">
+          <div class="input-group col-md-12">
+            <input id="searchInput" type="text" class="form-control input-md" placeholder="Search" />
+            <span class="input-group-btn">
+              <button id="searchBtn" class="btn btn-info btn-lg" type="button">
+                <i class="glyphicon glyphicon-search"></i>
+              </button>
+            </span>
+          </div>
+        </div>
+      </div>
       <div class="col-md-1">
         <a id="expandAll" class="btn btn-success">Expand All</a>
       </div>
-      <div class="col-md-6">
+      <div class="col-md-4">
         <div class="truncate" id="fullTitle"></div>
         <div class="truncate" id="fullUrl"></div>
       </div>
     </nav>
-    <tree class=""></tree>
+    <tree></tree>
   </body>
 </html>

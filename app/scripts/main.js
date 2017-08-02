@@ -4,36 +4,36 @@ var background = chrome.extension.getBackgroundPage();
 
 var IS_ALT_PRESSED = false;
 function checkKeyPressed(e) {
-	// shift
 	if (e.keyCode == 18) {
 		IS_ALT_PRESSED = true;
 	}
-	console.log(e, IS_ALT_PRESSED);
 }
 function checkKeyUp(e) {
-	// shift
 	if (e.keyCode == 18) {
 		IS_ALT_PRESSED = false;
 	}
-	
-	console.log(e, IS_ALT_PRESSED);
 }
 document.onkeydown = checkKeyPressed;
 document.onkeyup = checkKeyUp;
 
 // scroll all the way left on refresh
 $(document).ready(function(){
-    $(this).scrollLeft(0);
+	$(this).scrollLeft(0);
 });
 
 document.addEventListener('DOMContentLoaded', function() {
 	renderTree();
+
+	var searchBar = document.getElementById('searchInput');
+	searchBar.addEventListener('click', function() {
+		searchBar.value = '';
+	})
 });
 
 function renderTree() {
 
-	var margin = {top: 20, right: 120, bottom: 20, left: 120},
-		width = 2000, //960 - margin.right - margin.left,
+	var margin = {top: 40, right: 120, bottom: 20, left: 120},
+		width = 2500 - margin.right - margin.left,
 		height = 850 - margin.top - margin.bottom;
 
 	var i = 0,
@@ -54,13 +54,13 @@ function renderTree() {
 
 	if (background.urlDocs.length == 0) { return }
 
-	var docs = JSON.parse(JSON.stringify(background.urlDocs, ['url', 'title', 'fullTitle', 'children', 'uid']))
+	var docs = JSON.parse(JSON.stringify(background.urlDocs, ['url', 'title', 'fullTitle', 'children', 'uid']));
 	root = {
-			'children': docs,
-		  'title': 'New Tab',
-		  'fullTitle': 'New Tab',
-		  'url': 'chrome://newtab'
-		}
+		'children': docs,
+		'title': 'New Tab',
+		'fullTitle': 'New Tab',
+		'url': 'chrome://newtab'
+	};
 
 	root.x0 = height / 2;
 	root.y0 = 0;
@@ -74,20 +74,33 @@ function renderTree() {
 	}
 	*/
 	function toggleAll(d) {
-    if (d.children) {
-      d.children.forEach(toggleAll);
-      toggle(d);
-    }
+		if (d.children) {
+		  d.children.forEach(toggleAll);
+		  toggle(d);
+		}
   }
 
 	//root.children.forEach(collapse);
 	//collapse(root)
 
-	root.children.forEach(toggleAll)
-	expandToSelected()
-	update(root)
+	root.children.forEach(toggleAll);
+	expandToSelected(background.docToLightUp);
+	update(root);
 
-	//update(root);
+	// search
+
+	var searchBtn = document.getElementById('searchBtn')
+	searchBtn.addEventListener('click', function() {
+		var term = document.getElementById('searchInput').value.toLowerCase();
+		search(term, {'children': background.urlDocs});
+
+		root.children.forEach(toggleAll);
+		for (var i = 0; i < results.length; i++) {
+			expandToSelected(results[i]);
+		}
+		update(root)
+	});
+
 
 	d3.select(self.frameElement).style("height", "800px");
 
@@ -192,9 +205,10 @@ function renderTree() {
 
 	// Toggle children on click.
 	function click(d) {
+		console.log(root)
 		if (IS_ALT_PRESSED) {
 			// Open that url and set location in tree to match
-			IS_ALT_PRESSED = false // dont want it to be considered pressed anymore
+			IS_ALT_PRESSED = false; // dont want it to be considered pressed anymore
 			background.currentTabDoc = background.findDoc(background.urlDocs, null, null, d.uid)
 			chrome.tabs.create({url: d.url});
 			return;
@@ -230,11 +244,11 @@ function renderTree() {
 	// Toggle children.
 	function toggle(d) {
 	  if (d.children) {
-	    d._children = d.children;
-	    d.children = null;
+			d._children = d.children;
+			d.children = null;
 	  } else {
-	    d.children = d._children;
-	    d._children = null;
+			d.children = d._children;
+			d._children = null;
 	  }
 	}
 
@@ -242,55 +256,56 @@ function renderTree() {
 
 	var btn = document.getElementById('expandAll')
 	btn.addEventListener('click', function() {
-		expandCollapseAll(btn)
+		expandCollapseAll(btn);
 	});
 
 	function expandCollapseAll(btn) {
 		if (btn.textContent == 'Expand All') {
 			btn.textContent = 'Collapse All';
 			// expand all nodes
-			expand(root)
+			expand(root);
 		} else {
 			btn.textContent = 'Expand All';
 			// collapse all but the first node
-			root.children.forEach(toggleAll)
+			//toggleAll(root)
+			root.children.forEach(toggleAll);
+			expandToSelected(background.docToLightUp); // still show the last used doc
 			$('body, hmtl').animate({ scrollLeft: 0}, 500); // scroll all the way left
 		}
-		update(root)
+		update(root);
 	}
 
 	function expand(d){   
-    var children = (d.children)?d.children:d._children;
-    if (d._children) {        
-        d.children = d._children;
-        d._children = null;       
-    }
-    if (children) {
-      children.forEach(expand);
-    }
+		var children = (d.children)?d.children:d._children;
+		if (d._children) {        
+			d.children = d._children;
+			d._children = null;       
+		}
+		if (children) {
+		  children.forEach(expand);
+		}
 	}
 
-	function expandToSelected() {
+	function expandToSelected(targetDocWParents) {
 		var steps = []
 		function followParents(d) {
-			console.log('follow', d)
-			steps.push(d.uid)
+			steps.push(d.uid);
 			if (d.parent) {
 				followParents(d.parent);
 			}
 		}
 
-		followParents(background.docToLightUp); // get steps
+		followParents(targetDocWParents); // get steps
 		console.log(steps, root)
 
 		var lastUsedDoc = root;
-		for (var i = 0; i < steps.length; i++) {
+		for (var i = 0; i < steps.length - 1; i++) {
 			var step = steps[steps.length - 1 - i]; // they are in reverse order
 			for (var c = 0; c < lastUsedDoc.children.length; c++) {
-				var d = lastUsedDoc.children[c]
+				var d = lastUsedDoc.children[c];
 				if (d.uid == step) {
 					lastUsedDoc = d;
-					toggle(lastUsedDoc);
+					expand(lastUsedDoc);
 					break;
 				}
 			}
