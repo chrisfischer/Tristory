@@ -1,26 +1,39 @@
 'use strict'
 
-var results = []
+var _results = []
 
 function search(term, startingNode) {
-	results = []
-	searchHelper(term, startingNode)
+	resetResults()
+	_searchHelper(term, _results, startingNode)
+	return _results
 }
 
-function searchHelper(term, startingNode) {
+function _searchHelper(term, results, startingNode) {
 	// assume term is lowercased
-	console.log(startingNode, term, isResult(term, startingNode));
-	if (isResult(term, startingNode)) {
+	if (_isResult(term, startingNode)) {
 		results.push(startingNode);
 	}
 	if (startingNode.children) {
 		startingNode.children.forEach(function(d) {
-			searchHelper(term, d);
+			_searchHelper(term, results, d);
 		});
 	}
 
 }
 
-function isResult(term, doc) {
+function _isResult(term, doc) {
 	return (Boolean(doc.fullTitle) && doc.fullTitle.toLowerCase().includes(term)) || (Boolean(doc.url) && doc.url.toLowerCase().includes(term));
+}
+
+function querySearchResults(uid) {
+	for (var i = 0; i < _results.length; i++) {
+		if (_results[i].uid == uid) {
+			return true
+		}
+	}
+	return false
+}
+
+function resetResults() {
+	_results = []
 }

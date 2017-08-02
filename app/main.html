@@ -20,17 +20,27 @@
   </head>
   <body>
     <nav class="navbar navbar-fixed-top top">
-      <div class="col-md-4">
-        <div id="custom-search-input">
-          <div class="input-group col-md-12">
-            <input id="searchInput" type="text" class="form-control input-md" placeholder="Search" />
-            <span class="input-group-btn">
-              <button id="searchBtn" class="btn btn-info btn-lg" type="button">
-                <i class="glyphicon glyphicon-search"></i>
-              </button>
-            </span>
+      <div class="col-md-4 hug-left">
+        <div class="push-off-left">
+          <div id="custom-search-input">
+            <div class="input-group col-md-12">
+              <input id="searchInput" type="text" class="form-control input-md" placeholder="Search" />
+              <span class="input-group-btn">
+                <button id="clearBtn" class="btn btn-info btn-lg" type="button">
+                  <i class="glyphicon glyphicon-remove"></i>
+                </button>
+              </span>
+              <span class="input-group-btn">
+                <button id="searchBtn" class="btn btn-info btn-lg" type="button">
+                  <i class="glyphicon glyphicon-search"></i>
+                </button>
+              </span>
+            </div>
           </div>
         </div>
+        <!--
+        <div class="space"></div>
+        -->
       </div>
       <div class="col-md-1">
         <a id="expandAll" class="btn btn-success">Expand All</a>
@@ -40,6 +50,10 @@
         <div class="truncate" id="fullUrl"></div>
       </div>
     </nav>
-    <tree></tree>
+    
+    <div class="row">
+      <div class="col-xs-1 space"></div>
+      <tree class="col-xs-1"></tree>
+    </div>
   </body>
 </html>

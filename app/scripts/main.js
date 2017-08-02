@@ -22,15 +22,10 @@ $(document).ready(function(){
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-	renderTree();
-
-	var searchBar = document.getElementById('searchInput');
-	searchBar.addEventListener('click', function() {
-		searchBar.value = '';
-	})
+	renderPage();
 });
 
-function renderTree() {
+function renderPage() {
 
 	var margin = {top: 40, right: 120, bottom: 20, left: 120},
 		width = 2500 - margin.right - margin.left,
@@ -64,42 +59,53 @@ function renderTree() {
 
 	root.x0 = height / 2;
 	root.y0 = 0;
-	/*
-	function collapse(d) {
-		if (d.children) {
-			d._children = d.children;
-			d._children.forEach(collapse);
-			d.children = null;
-		}
-	}
-	*/
-	function toggleAll(d) {
-		if (d.children) {
-		  d.children.forEach(toggleAll);
-		  toggle(d);
-		}
-  }
-
-	//root.children.forEach(collapse);
-	//collapse(root)
 
 	root.children.forEach(toggleAll);
 	expandToSelected(background.docToLightUp);
 	update(root);
 
-	// search
+	// search stuff
+	// get search box ready
+	var searchBox = document.getElementById('searchInput');
+	var searchBtn = document.getElementById('searchBtn');
+	var clearBtn = document.getElementById('clearBtn');
 
-	var searchBtn = document.getElementById('searchBtn')
-	searchBtn.addEventListener('click', function() {
-		var term = document.getElementById('searchInput').value.toLowerCase();
-		search(term, {'children': background.urlDocs});
+	searchBox.addEventListener('input', function (evt) {
+	    if (!this.value) {
+	    	clearBtn.style.visibility = 'hidden';
+	    } else {
+	    	clearBtn.style.visibility = 'visible';
+	    }
+	});
 
-		root.children.forEach(toggleAll);
-		for (var i = 0; i < results.length; i++) {
-			expandToSelected(results[i]);
-		}
+	clearBtn.addEventListener('click', function() {
+		searchBox.value = '';
+		searchBox.focus();
+		clearBtn.style.visibility = 'hidden';
+
+		resetResults()
 		update(root)
 	});
+
+
+	searchBtn.addEventListener('click', parseAndSearch);
+	searchBox.addEventListener('keydown', function (e) {
+	    if (e.keyCode == 13) { parseAndSearch() }
+	});
+
+	function parseAndSearch() {
+		var term = document.getElementById('searchInput').value.toLowerCase();
+
+		if (!term) { return }
+
+		var results = search(term, {'children': background.urlDocs});
+		
+		for (var i = 0; i < results.length; i++) {
+			expandToSelected(results[i]);n
+		}
+		update(root)
+
+	}
 
 
 	d3.select(self.frameElement).style("height", "800px");
@@ -128,7 +134,13 @@ function renderTree() {
 
 		nodeEnter.append("circle")
 				.attr("r", 1e-6)
-				.style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+				.style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; })
+				.style("stroke", function(d) {
+					if (querySearchResults(d.uid)) { return 'red' }
+				})
+  				.style("stroke-width", function(d) {
+					if (querySearchResults(d.uid)) { return 3 }
+				})
 
 		nodeEnter.append("text")
 				.attr("x", function(d) { return d.children || d._children ? -10 : 10; })
@@ -241,6 +253,13 @@ function renderTree() {
 		divFullUrl.textContent = ''; //'\u00A0';
 	}
 
+	function toggleAll(d) {
+		if (d.children) {
+		  d.children.forEach(toggleAll);
+		  toggle(d);
+		}
+	}
+
 	// Toggle children.
 	function toggle(d) {
 	  if (d.children) {
@@ -260,6 +279,7 @@ function renderTree() {
 	});
 
 	function expandCollapseAll(btn) {
+
 		if (btn.textContent == 'Expand All') {
 			btn.textContent = 'Collapse All';
 			// expand all nodes
@@ -267,10 +287,13 @@ function renderTree() {
 		} else {
 			btn.textContent = 'Expand All';
 			// collapse all but the first node
-			//toggleAll(root)
 			root.children.forEach(toggleAll);
 			expandToSelected(background.docToLightUp); // still show the last used doc
 			$('body, hmtl').animate({ scrollLeft: 0}, 500); // scroll all the way left
+			
+			document.getElementById('searchInput').value = ''
+			document.getElementById('clearBtn').style.visibility = 'hidden' // clear the search
+			resetResults()
 		}
 		update(root);
 	}
@@ -296,7 +319,6 @@ function renderTree() {
 		}
 
 		followParents(targetDocWParents); // get steps
-		console.log(steps, root)
 
 		var lastUsedDoc = root;
 		for (var i = 0; i < steps.length - 1; i++) {
