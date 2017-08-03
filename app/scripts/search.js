@@ -7,7 +7,6 @@ function search(term, root) {
 
 function _searchHelper(term, startingNode) {
 	// assume term is lowercased
-	console.log(term, startingNode.url, _isResult(term, startingNode));
 	if (_isResult(term, startingNode)) {
 		startingNode.isResult = true;
 		d3.select("#u" + startingNode.uid).select("circle").style({"stroke": "red", "stroke-width": 3});

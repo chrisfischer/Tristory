@@ -19,10 +19,11 @@ document.onkeyup = checkKeyUp;
 // scroll all the way left on refresh
 $(document).ready(function(){
 	$(this).scrollLeft(0);
+	renderPage();
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-	renderPage();
+	//renderPage();
 });
 
 function renderPage() {
@@ -77,6 +78,10 @@ function renderPage() {
 	searchBox.addEventListener('input', function (evt) {
 		if (!this.value) {
 			clearBtn.style.visibility = 'hidden';
+
+			// if the search box is emptied then clear results
+			resetResults(root)
+			update(root)
 		} else {
 			clearBtn.style.visibility = 'visible';
 		}
@@ -166,7 +171,10 @@ function renderPage() {
 				})
 				.style("fill-opacity", 1e-6)
 				.style("fill", function(d) {
-					if (d.uid == background.docToLightUp.uid) { return 'red' }
+					if (d.uid && d.uid == background.docToLightUp.uid) { return 'steelblue' }
+				})
+				.style("font-weight", function(d) {
+					if (d.uid && d.uid == background.docToLightUp.uid) { return 'bold' }
 				})
 
 		// Transition nodes to their new position.

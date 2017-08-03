@@ -98,6 +98,7 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 				'parent': null,
 				'title': null,
 				'fullTitle': null,
+				'isAlive': true,
 				'uid': _getUID()
 		};
 		addNewStartingNode(doc);
@@ -116,11 +117,15 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 				'parent': currentTabDoc,
 				'title': null,
 				'fullTitle': null,
+				'isAlive': true,
 				'uid': _getUID()
 		};
 		addChild(doc);
 
-		if (newUrl.includes('#') && newUrl.includes(currentTabDoc.url)) {
+		var re = /#[\w|\W|\d|\D]+\/[\w|\W|\d|\D]+/ig // for parsing newUrl
+		var re2 = /(?:(?!#).)*/i 					 // for parsing parent url
+
+		if (newUrl.includes("#") && !re.test(newUrl) && newUrl.includes(re2.exec(currentTabDoc.url))) {
 			// possibly a change of section in the path using #
 			doc.title = currentTabDoc.title;
 			doc.fullTitle = currentTabDoc.fullTitle;
@@ -163,13 +168,10 @@ function findDoc(arrOfDocs, targetTabId, targetUrl, targetUID) {
 
 	if (!arrOfDocs) { return null }
 
-	console.log('find doc', targetTabId, targetUrl, targetUID, arrOfDocs);
 	for (var i = 0; i < arrOfDocs.length; i++) {
 		var currDoc = arrOfDocs[i];
-		console.log("start new currDoc", currDoc, arrOfDocs);
 		if (targetTabId && targetUrl && !targetUID && currDoc.tabId == targetTabId && currDoc.url == targetUrl) {
 			// searching by targetTabId and target url
-			console.log("matched", currDoc);
 			return currDoc;
 		} else if (!targetTabId && targetUrl && !targetUID && targetUrl == currDoc.url) {
 			// searching by target url
@@ -179,25 +181,21 @@ function findDoc(arrOfDocs, targetTabId, targetUrl, targetUID) {
 			return currDoc;
 		} else if (!currDoc.children) {
 			// reached the bottom of the tree
-			console.log("reached bottom", currDoc, arrOfDocs);
 			continue;
 		} else {
 			var doc_return = findDoc(currDoc.children, targetTabId, targetUrl, targetUID);
 			if (!doc_return) {
-				console.log("doc_return is null", currDoc, doc_return, arrOfDocs)
 				continue;
 			} else {
-				console.log(currDoc, doc_return)
 				return doc_return;
 			}
 			
 		}
 	}
-	console.log("finished, returned null", arrOfDocs)
 	return null;
 }
 
-function onActivateOrCreate(highlightInfo) {
+function onActivate(highlightInfo) {
 	var queryInfo = {
 		active: true,
 		currentWindow: true
@@ -236,7 +234,7 @@ function onActivateOrCreate(highlightInfo) {
 	});
 }
 
-chrome.tabs.onActivated.addListener(onActivateOrCreate);
+chrome.tabs.onActivated.addListener(onActivate);
 chrome.tabs.onCreated.addListener(function (tab) {
 	console.log('onCreated begin', FLAG_CREATED, tab);
 
@@ -245,6 +243,12 @@ chrome.tabs.onCreated.addListener(function (tab) {
 		FLAG_CREATED = true;		
 	}
 	console.log('onCreated end', FLAG_CREATED);
+})
+chrome.tabs.onRemoved.addListener(function (tabId, info) {
+	// info has windowId and isWindowClosing
+	console.log("onClosed", tabId)
+	
+	
 })
 
 
