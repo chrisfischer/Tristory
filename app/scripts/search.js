@@ -1,22 +1,28 @@
 'use strict'
 
-var _results = []
-
-function search(term, startingNode) {
-	resetResults()
-	_searchHelper(term, _results, startingNode)
-	return _results
+function search(term, root) {
+	resetResults(root)
+	_searchHelper(term, root);
 }
 
-function _searchHelper(term, results, startingNode) {
+function _searchHelper(term, startingNode) {
 	// assume term is lowercased
+	console.log(term, startingNode.url, _isResult(term, startingNode));
 	if (_isResult(term, startingNode)) {
-		results.push(startingNode);
-	}
-	if (startingNode.children) {
-		startingNode.children.forEach(function(d) {
-			_searchHelper(term, results, d);
-		});
+		startingNode.isResult = true;
+		d3.select("#u" + startingNode.uid).select("circle").style({"stroke": "red", "stroke-width": 3});
+		// if there's a parent, expand it
+		if (startingNode.parent) {
+			_expand(startingNode.parent);
+		}
+	} /*else {
+		startingNode.isResult = false;
+		d3.select("g.node", "u" + startingNode.uid).select("circle").style({"stroke": "steelblue", "stroke-width": 1.5});
+	}*/
+
+	var children = (startingNode.children)?startingNode.children:startingNode._children;
+	if (children) {
+		children.forEach(function(d) { _searchHelper(term, d); });
 	}
 
 }
@@ -25,15 +31,34 @@ function _isResult(term, doc) {
 	return (Boolean(doc.fullTitle) && doc.fullTitle.toLowerCase().includes(term)) || (Boolean(doc.url) && doc.url.toLowerCase().includes(term));
 }
 
-function querySearchResults(uid) {
-	for (var i = 0; i < _results.length; i++) {
-		if (_results[i].uid == uid) {
-			return true
+function resetResults(root) {
+
+	d3.selectAll('g.node').each(function(d) {
+    	d3.select(this).select("circle").style({"stroke": "steelblue", "stroke-width": 1.5})
+	})
+
+	resetRecursive(root);
+
+	function resetRecursive(root) {
+		root.isResult = false;
+		// reset either children or _children
+		var children = (root.children)?root.children:root._children;
+		if (children) {
+			children.forEach(resetResults);
 		}
 	}
-	return false
 }
 
-function resetResults() {
-	_results = []
+function _expand(d){   
+
+	if (d._children) {        
+		d.children = d._children;
+		d._children = null;       
+	}
+
+	if (d.parent) {
+		_expand(d.parent);
+	}
 }
+
+

@@ -61,8 +61,12 @@ function renderPage() {
 	root.y0 = 0;
 
 	root.children.forEach(toggleAll);
-	expandToSelected(background.docToLightUp);
+	if (background.docToLightUp) {
+		expandToSelected(background.docToLightUp);
+	}
 	update(root);
+
+	console.log(root)
 
 	// search stuff
 	// get search box ready
@@ -71,11 +75,11 @@ function renderPage() {
 	var clearBtn = document.getElementById('clearBtn');
 
 	searchBox.addEventListener('input', function (evt) {
-	    if (!this.value) {
-	    	clearBtn.style.visibility = 'hidden';
-	    } else {
-	    	clearBtn.style.visibility = 'visible';
-	    }
+		if (!this.value) {
+			clearBtn.style.visibility = 'hidden';
+		} else {
+			clearBtn.style.visibility = 'visible';
+		}
 	});
 
 	clearBtn.addEventListener('click', function() {
@@ -83,14 +87,14 @@ function renderPage() {
 		searchBox.focus();
 		clearBtn.style.visibility = 'hidden';
 
-		resetResults()
+		resetResults(root)
 		update(root)
 	});
 
 
 	searchBtn.addEventListener('click', parseAndSearch);
 	searchBox.addEventListener('keydown', function (e) {
-	    if (e.keyCode == 13) { parseAndSearch() }
+		if (e.keyCode == 13) { parseAndSearch() }
 	});
 
 	function parseAndSearch() {
@@ -98,15 +102,12 @@ function renderPage() {
 
 		if (!term) { return }
 
-		var results = search(term, {'children': background.urlDocs});
-		
-		for (var i = 0; i < results.length; i++) {
-			expandToSelected(results[i]);n
-		}
+		root.children.forEach(toggleAll)
+
+		search(term, root);
+
 		update(root)
-
 	}
-
 
 	d3.select(self.frameElement).style("height", "800px");
 
@@ -126,7 +127,7 @@ function renderPage() {
 		// Enter any new nodes at the parent's previous position.
 		var nodeEnter = node.enter().append("g")
 				.attr("class", "node")
-				.attr("id", function(d) { return d.uid})
+				.attr("id", function(d) { return "u" + d.uid})
 				.attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
 				.on("click", click)
 				.on("mouseover", hoverOn)
@@ -136,10 +137,20 @@ function renderPage() {
 				.attr("r", 1e-6)
 				.style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; })
 				.style("stroke", function(d) {
-					if (querySearchResults(d.uid)) { return 'red' }
+					if (d.isResult) { 
+						return 'red' 
+					} else {
+						return 'steelblue'
+					}
+
 				})
-  				.style("stroke-width", function(d) {
-					if (querySearchResults(d.uid)) { return 3 }
+				.style("stroke-width", function(d) {
+					console.log('stroke-width reached')
+					if (d.isResult) { 
+						return 3 
+					} else {
+						return 1.5
+					}
 				})
 
 		nodeEnter.append("text")
@@ -249,8 +260,8 @@ function renderPage() {
 	function hoverOff(d) {
 		var divFullTitle = document.getElementById('fullTitle');
 		var divFullUrl = document.getElementById('fullUrl');
-		divFullTitle.textContent = ''; //'\u00A0';
-		divFullUrl.textContent = ''; //'\u00A0';
+		divFullTitle.textContent = '';
+		divFullUrl.textContent = ''; 
 	}
 
 	function toggleAll(d) {
@@ -262,13 +273,14 @@ function renderPage() {
 
 	// Toggle children.
 	function toggle(d) {
-	  if (d.children) {
+		if (d.children) {
 			d._children = d.children;
+			d._children.forEach(function(d1) { d1.parent = d });
 			d.children = null;
-	  } else {
+		} else {
 			d.children = d._children;
 			d._children = null;
-	  }
+		}
 	}
 
 	// expand/collapse all utils
@@ -283,7 +295,7 @@ function renderPage() {
 		if (btn.textContent == 'Expand All') {
 			btn.textContent = 'Collapse All';
 			// expand all nodes
-			expand(root);
+			expandAll(root);
 		} else {
 			btn.textContent = 'Expand All';
 			// collapse all but the first node
@@ -293,19 +305,26 @@ function renderPage() {
 			
 			document.getElementById('searchInput').value = ''
 			document.getElementById('clearBtn').style.visibility = 'hidden' // clear the search
-			resetResults()
+			resetResults(root)
 		}
 		update(root);
 	}
 
-	function expand(d){   
-		var children = (d.children)?d.children:d._children;
+	function expandAll(d) {   
 		if (d._children) {        
 			d.children = d._children;
 			d._children = null;       
 		}
+		var children = (d.children)?d.children:d._children;
 		if (children) {
-		  children.forEach(expand);
+			children.forEach(expandAll);
+		}
+	}
+
+	function expandOne(d) {
+		if (d._children) {        
+			d.children = d._children;
+			d._children = null;       
 		}
 	}
 
@@ -327,7 +346,7 @@ function renderPage() {
 				var d = lastUsedDoc.children[c];
 				if (d.uid == step) {
 					lastUsedDoc = d;
-					expand(lastUsedDoc);
+					expandOne(lastUsedDoc);
 					break;
 				}
 			}
