@@ -280,14 +280,14 @@ function getTrees() {
 	}
 
 	return [{
-				'children': alive,
+				'children': ((alive.length != 0) ? alive : null),
 				'title': 'New Tab',
 				'fullTitle': 'New Tab',
 				'url': 'chrome://newtab',
 				'isAlive': true
 		   },
 		   {
-				'children': dead,
+				'children': ((dead.length != 0) ? dead : null),
 				'title': 'New Tab',
 				'fullTitle': 'New Tab',
 				'url': 'chrome://newtab',

@@ -6,6 +6,10 @@ body {
   outline: none !important;
 }
 
+label.focus {
+  outline: none !important;
+}
+
 /* for tree */
 .node {
   cursor: pointer;
@@ -54,6 +58,11 @@ body {
 
 .push-off-left {
   padding-left: 15px;
+}
+
+.float-right {
+  float: right;
+  padding-right: 15px;
 }
 
 /* expandAll button */

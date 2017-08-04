@@ -14,6 +14,8 @@
      -->
     <script src="scripts/d3.v3.min.js" charset="utf-8"></script>
     <script src="scripts/jquery-3.2.1.min.js"></script>
+    <script src="scripts/tether.min.js"></script>
+    <script src="scripts/bootstrap.min.js"></script>
     <script src="scripts/search.js"></script>
     <script src="scripts/main.js"></script>
 
@@ -49,12 +51,18 @@
         <div class="truncate" id="fullTitle"></div>
         <div class="truncate" id="fullUrl"></div>
       </div>
-      <div class="btn-group" data-toggle="buttons">
-        <label class="btn btn-primary active">
-          <input type="radio" name="options" id="option1" autocomplete="off" checked> Radio 1
+      <!--
+      <div class="btn-group" role="group">
+        <button type="button" class="btn btn-primary">Left</button>
+        <button type="button" class="btn btn-primary">Middle</button>
+      </div>
+      -->
+      <div class="btn-group float-right" data-toggle="buttons">
+        <label class="btn btn-primary active" id="option1" aria-pressed="true">
+          <input type="radio" name="options" autocomplete="off">Open Tabs
         </label>
-        <label class="btn btn-primary">
-          <input type="radio" name="options" id="option2" autocomplete="off"> Radio 2
+        <label class="btn btn-primary" id="option2" aria-pressed="true">
+          <input type="radio" name="options" autocomplete="off">Closed Tabs
         </label>
       </div>
     </nav>
