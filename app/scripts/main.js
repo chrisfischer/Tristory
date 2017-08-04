@@ -19,14 +19,20 @@ document.onkeyup = checkKeyUp;
 // scroll all the way left on refresh
 $(document).ready(function(){
 	$(this).scrollLeft(0);
-	renderPage();
+
+	// get alive and dead trees
+	var [alive, dead] = background.getTrees();
+
+	renderPage(alive);
 });
 
+/*
 document.addEventListener('DOMContentLoaded', function() {
 	//renderPage();
 });
+*/
 
-function renderPage() {
+function renderPage(inputTree) {
 
 	var margin = {top: 40, right: 120, bottom: 20, left: 120},
 		width = 2500 - margin.right - margin.left,
@@ -47,16 +53,21 @@ function renderPage() {
 			.attr("height", height + margin.top + margin.bottom)
 			.append("g")
 			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
+	/*
 	if (background.urlDocs.length == 0) { return }
 
-	var docs = JSON.parse(JSON.stringify(background.urlDocs, ['url', 'title', 'fullTitle', 'children', 'uid']));
+	var docs = JSON.parse(JSON.stringify(background.urlDocs, ['url', 'title', 'fullTitle', 'children', 'uid', 'isAlive']));
 	root = {
 		'children': docs,
 		'title': 'New Tab',
 		'fullTitle': 'New Tab',
-		'url': 'chrome://newtab'
+		'url': 'chrome://newtab',
+		'isAlive': true
 	};
+	*/
+
+
+	root = inputTree
 
 	root.x0 = height / 2;
 	root.y0 = 0;
@@ -150,7 +161,6 @@ function renderPage() {
 
 				})
 				.style("stroke-width", function(d) {
-					console.log('stroke-width reached')
 					if (d.isResult) { 
 						return 3 
 					} else {
@@ -171,7 +181,13 @@ function renderPage() {
 				})
 				.style("fill-opacity", 1e-6)
 				.style("fill", function(d) {
-					if (d.uid && d.uid == background.docToLightUp.uid) { return 'steelblue' }
+					if (!d.isAlive) {
+						return 'lightgray'
+					}
+					if (d.uid && d.uid == background.docToLightUp.uid) { 
+						return 'steelblue' 
+					}
+					
 				})
 				.style("font-weight", function(d) {
 					if (d.uid && d.uid == background.docToLightUp.uid) { return 'bold' }
@@ -211,6 +227,14 @@ function renderPage() {
 				.attr("d", function(d) {
 					var o = {x: source.x0, y: source.y0};
 					return diagonal({source: o, target: o});
+				})
+				.attr("id", function(d) {
+					return "l" + d.target.uid
+				})
+				.style("stroke", function(d) {
+					if (d.target.expandToSelected) {
+						return "steelblue"
+					}
 				});
 
 		// Transition links to their new position.
@@ -241,6 +265,11 @@ function renderPage() {
 			// Open that url and set location in tree to match
 			IS_ALT_PRESSED = false; // dont want it to be considered pressed anymore
 			background.currentTabDoc = background.findDoc(background.urlDocs, null, null, d.uid)
+
+			// reset to active
+			//background.currentTabDoc.isAlive = true
+			//d.isAlive = true
+
 			chrome.tabs.create({url: d.url});
 			return;
 		}
@@ -348,12 +377,18 @@ function renderPage() {
 		followParents(targetDocWParents); // get steps
 
 		var lastUsedDoc = root;
-		for (var i = 0; i < steps.length - 1; i++) {
+		for (var i = 0; i < steps.length; i++) {
 			var step = steps[steps.length - 1 - i]; // they are in reverse order
 			for (var c = 0; c < lastUsedDoc.children.length; c++) {
 				var d = lastUsedDoc.children[c];
+
 				if (d.uid == step) {
+					if (i == steps.length - 1) { // last step
+						d.expandToSelected = true // set the path to be red
+						return;
+					}
 					lastUsedDoc = d;
+					d.expandToSelected = true
 					expandOne(lastUsedDoc);
 					break;
 				}

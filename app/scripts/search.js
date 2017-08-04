@@ -48,7 +48,10 @@ function resetResults(root) {
 	}
 }
 
-function _expand(d){   
+function _expand(d) {
+	/*
+	Expands from a child upwards
+	*/ 
 
 	if (d._children) {        
 		d.children = d._children;

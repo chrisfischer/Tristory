@@ -28,8 +28,8 @@ function addChild(child) {
 
 function addTitleToLimbo(tabId, url, fullTitle) {
 	var title = '';
-	if (fullTitle.length > 20) {
-		title = fullTitle.substring(0,20) + '...';
+	if (fullTitle.length > 25) {
+		title = fullTitle.substring(0,25) + '...';
 	} else {
 		title = fullTitle;
 	}
@@ -122,8 +122,8 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 		};
 		addChild(doc);
 
-		var re = /#[\w|\W|\d|\D]+\/[\w|\W|\d|\D]+/ig // for parsing newUrl
-		var re2 = /(?:(?!#).)*/i 					 // for parsing parent url
+		var re = /#[\w|\W|\d|\D]+\/[\w|\W|\d|\D]+/ig 	// for parsing newUrl
+		var re2 = /(?:(?!#).)*/i 					 	// for parsing parent url
 
 		if (newUrl.includes("#") && !re.test(newUrl) && newUrl.includes(re2.exec(currentTabDoc.url))) {
 			// possibly a change of section in the path using #
@@ -246,10 +246,68 @@ chrome.tabs.onCreated.addListener(function (tab) {
 })
 chrome.tabs.onRemoved.addListener(function (tabId, info) {
 	// info has windowId and isWindowClosing
-	console.log("onClosed", tabId)
+	function markRemoved(d) {
+		if (d.tabId == tabId) {
+			d.isAlive = false;
+		}
+		if (d.children) {
+			d.children.forEach(markRemoved);
+		}
+	}
+	urlDocs.forEach(markRemoved);
 	
 	
 })
+
+function getTrees() {
+	if (urlDocs.length == 0) {
+		return null
+	}
+
+	var docs = JSON.parse(JSON.stringify(urlDocs, ['url', 'title', 'fullTitle', 'children', 'uid', 'isAlive']));
+
+	var alive = []
+	var dead = []
+
+	for (var i = 0; i < docs.length; i++) {
+		var isBranchAlive = false;
+		var branch = docs[i];
+		if (_checkBrachForAlive(branch)) {
+			alive.push(branch)
+		} else {
+			dead.push(branch)
+		}
+	}
+
+	return [{
+				'children': alive,
+				'title': 'New Tab',
+				'fullTitle': 'New Tab',
+				'url': 'chrome://newtab',
+				'isAlive': true
+		   },
+		   {
+				'children': dead,
+				'title': 'New Tab',
+				'fullTitle': 'New Tab',
+				'url': 'chrome://newtab',
+				'isAlive': false
+		   }];
+}
+
+function _checkBrachForAlive(startingNode) {
+	if (startingNode.isAlive) { return true }
+
+	if (startingNode.children) {
+		for (var i = 0; i < startingNode.children.length; i++) {
+			if (_checkBrachForAlive(startingNode.children[i])) {
+				return true
+			}
+		}
+		
+	}
+	return false
+}
 
 
 
