@@ -7,6 +7,7 @@ function search(term, root) {
 
 function _searchHelper(term, startingNode) {
 	// assume term is lowercased
+	console.log(term, startingNode, _isResult(term, startingNode))
 	if (_isResult(term, startingNode)) {
 		startingNode.isResult = true;
 		d3.select("#u" + startingNode.uid).select("circle").style({"stroke": "red", "stroke-width": 3});
@@ -53,7 +54,8 @@ function _expand(d) {
 	Expands from a child upwards
 	*/ 
 
-	if (d._children) {        
+	if (d._children) {
+		console.log("_expand", d)
 		d.children = d._children;
 		d._children = null;       
 	}

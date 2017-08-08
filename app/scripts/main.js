@@ -73,11 +73,13 @@ $(document).ready(function() {
 	closedTabsRadio.addEventListener('click', function() {
 		window.root = dead;
 		resetSearchBar(); // reset search
+		$('body, hmtl').animate({ scrollLeft: 0}, 500);
 		update(window.root);
 	})
 	openTabsRadio.addEventListener('click', function() {
 		window.root = alive;
 		resetSearchBar(); // reset search
+		$('body, hmtl').animate({ scrollLeft: 0}, 500);
 		update(window.root);
 	})
 
@@ -119,31 +121,28 @@ function setUpTrees(aliveTree, deadTree) {
 	deadTree.x0 = height / 2;
 	deadTree.y0 = 0;
 
+	console.log(window.root)
+
 	window.root.children.forEach(toggleAll); // collapse all but entry node
+
+	console.log(window.root)
 
 	if (background.docToLightUp) {
 		expandToSelected(background.docToLightUp, window.root);
 	}
 
+	console.log(window.root);
+
 	update(window.root);
 
 	console.log(window.root);
+	return;
 
 	d3.select(self.frameElement).style("height", "800px");
 
 }
 
-/*
-	root - whole tree
-	settings - other params of the tree
-	source - what's being updated
-*/
 function update(source) {
-	/*
-	if (!source) {
-		source = root
-	}
-	*/
 
 	var [margin, width, height, tree, i, duration, diagonal, svg] = window.settings;
 
@@ -176,7 +175,6 @@ function update(source) {
 				} else {
 					return 'steelblue'
 				}
-
 			})
 			.style("stroke-width", function(d) {
 				if (d.isResult) { 
@@ -205,7 +203,6 @@ function update(source) {
 				if (d.uid && d.uid == background.docToLightUp.uid) { 
 					return 'steelblue' 
 				}
-				
 			})
 			.style("font-weight", function(d) {
 				if (d.uid && d.uid == background.docToLightUp.uid) { return 'bold' }
@@ -283,11 +280,13 @@ function parseAndSearch(entryNode) {
 
 	if (!term) { return }
 
-	entryNode.children.forEach(toggleAll)
+	toggleAll(entryNode);
 
 	search(term, entryNode);
 
-	update(entryNode)
+	expandOne(entryNode)
+
+	update(entryNode);
 }
 
 // Toggle children on click.
@@ -333,12 +332,9 @@ function toggleAll(d) {
 }
 
 // Toggle children.
-function toggle(d, saveParent=false) {
+function toggle(d) {
 	if (d.children) {
 		d._children = d.children;
-		if (saveParent) {
-			d._children.forEach(function(d1) { d1.parent = d });
-		}
 		d.children = null;
 	} else {
 		d.children = d._children;

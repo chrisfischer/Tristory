@@ -22,53 +22,48 @@
   </head>
   <body>
     <nav class="navbar navbar-fixed-top top">
-      <div class="col-md-4 hug-left">
-        <div class="push-off-left">
-          <div id="custom-search-input">
-            <div class="input-group col-md-12">
-              <input id="searchInput" type="text" class="form-control input-md" placeholder="Search" />
-              <span class="input-group-btn">
-                <button id="clearBtn" class="btn btn-info btn-lg" type="button">
-                  <i class="glyphicon glyphicon-remove"></i>
-                </button>
-              </span>
-              <span class="input-group-btn">
-                <button id="searchBtn" class="btn btn-info btn-lg" type="button">
-                  <i class="glyphicon glyphicon-search"></i>
-                </button>
-              </span>
-            </div>
+      <div class="col-md-1 logo">Tristory</div>
+      <div class="col-md-4">
+        <div class="custom-search-input">
+          <div class="input-group col-md-12">
+            <input id="searchInput" type="text" class="form-control input-md" placeholder="Search" />
+            <span class="input-group-btn">
+              <button id="clearBtn" class="btn btn-info btn-lg" type="button">
+                <i class="glyphicon glyphicon-remove"></i>
+              </button>
+            </span>
+            <span class="input-group-btn">
+              <button id="searchBtn" class="btn btn-info btn-lg" type="button">
+                <i class="glyphicon glyphicon-search"></i>
+              </button>
+            </span>
           </div>
         </div>
-        <!--
-        <div class="space"></div>
-        -->
       </div>
-      <div class="col-md-1">
-        <a id="expandAll" class="btn btn-success">Expand All</a>
+      <div class="col-md-1 expandAll">
+        <a id="expandAll" class="btn">Expand All</a>
       </div>
       <div class="col-md-4">
         <div class="truncate" id="fullTitle"></div>
         <div class="truncate" id="fullUrl"></div>
       </div>
-      <!--
-      <div class="btn-group" role="group">
-        <button type="button" class="btn btn-primary">Left</button>
-        <button type="button" class="btn btn-primary">Middle</button>
-      </div>
-      -->
-      <div class="btn-group float-right" data-toggle="buttons">
-        <label class="btn btn-primary active" id="option1" aria-pressed="true">
-          <input type="radio" name="options" autocomplete="off">Open Tabs
-        </label>
-        <label class="btn btn-primary" id="option2" aria-pressed="true">
-          <input type="radio" name="options" autocomplete="off">Closed Tabs
-        </label>
-      </div>
     </nav>
     
+    <div class="navbar-fixed-left space">
+        <div class="side-bar-top">
+          <div class="btn-group center-align" data-toggle="buttons">
+            <label class="btn btn-primary active" id="option1" aria-pressed="true">
+              <input type="radio" name="options" autocomplete="off">Open Tabs
+            </label>
+            <label class="btn btn-primary" id="option2" aria-pressed="true">
+              <input type="radio" name="options" autocomplete="off">Closed Tabs
+            </label>
+          </div>
+        </div>
+    </div>
+    
     <div class="row">
-      <div class="col-xs-1 space"></div>
+      <div class="col-xs-2"></div>
       <tree class="col-xs-1"></tree>
     </div>
   </body>

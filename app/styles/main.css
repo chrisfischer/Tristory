@@ -33,22 +33,9 @@ label.focus {
 
 /* for nav bar */
 .top {
-  margin-top: 15px !important;
-}
-
-/* for full title and url display */
-.truncate {
-  margin-top: -3px;
-  width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.space {
-  background-color: #fff;
-  width: 100px;
-  height: 100vh;
+  background-color: rgb(51, 103, 214);
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
 .hug-left {
@@ -65,51 +52,108 @@ label.focus {
   padding-right: 15px;
 }
 
+/* for full title and url display */
+.truncate {
+  margin-top: -3px;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #fff;
+}
+
+#fullTitle {
+  padding-top: 2px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+#fullUrl {
+  font-size: 12px;
+}
+
 /* expandAll button */
 #expandAll {
   width: 150px;
+  background-color: #303f9f;
+  color: #fff;
+  height: 36px;
+  padding-top: 7px;
 }
 
-/* expandAll button */
-.col-md-1 {
-  width: 170px !important;
+.expandAll {
+  width: 175px !important;
+}
+
+/* logo */
+.logo {
+  font-size: 25px;
+  text-align: center;
+  width: 230px !important;
+  font-family: Helvetica, Arial, sans-serif;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* for the side bar */
+.navbar-fixed-left {
+  border-radius: 0;
+  left: 0;
+  padding-left: 0;
+  padding-right: 0;
+  position: fixed;
+  top: 0;
+  z-index: 1029;
+}
+
+.space {
+  background-color: #fff;
+  border-color: lightgray;
+  border-right: 1px solid;
+  height: 100vh;
+  text-align: center;
+  width: 230px;
+}
+
+.side-bar-top {
+  margin-top: 74px;
 }
 
 /* Search */
-#custom-search-input {
-  border: solid 1px #E4E4E4;
-  border-radius: 6px;
+.custom-search-input {
   background-color: #fff;
+  border: solid 1px #E4E4E4;
+  border-radius: 4px;
 }
 
-#custom-search-input input {
+.custom-search-input input {
   border: 0;
   box-shadow: none;
 }
 
-#custom-search-input button {
-  margin: 2px 0 0 0;
+.custom-search-input button {
   background: none;
-  box-shadow: none;
   border: 0;
+  border-left: solid 1px #ccc;
+  box-shadow: none;
   color: #666666;
+  margin: 2px 0 0 0;
   padding: 0 8px 0 10px;
-  border-left: solid 1px #ccc;
 }
 
-#custom-search-input button:hover {
+.custom-search-input button:hover {
   border: 0;
-  box-shadow: none;
   border-left: solid 1px #ccc;
+  box-shadow: none;
 }
 
-#custom-search-input .glyphicon-search {
+.custom-search-input .glyphicon-search {
   font-size: 17px;
 }
 
-#clearBtn {
-  font-size: 15px;
+.clearBtn {
   border: 0 !important;
   border-left: 0 !important;
+  font-size: 15px;
   visibility: hidden;
 }
