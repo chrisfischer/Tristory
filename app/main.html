@@ -22,48 +22,76 @@
   </head>
   <body>
     <nav class="navbar navbar-fixed-top top">
-      <div class="col-md-1 logo">Tristory</div>
       <div class="col-md-4">
         <div class="custom-search-input">
           <div class="input-group col-md-12">
             <input id="searchInput" type="text" class="form-control input-md" placeholder="Search" />
             <span class="input-group-btn">
-              <button id="clearBtn" class="btn btn-info btn-lg" type="button">
+              <button id="clearBtn" class="btn btn-lg btn-primary-outline clearBtn" type="button">
                 <i class="glyphicon glyphicon-remove"></i>
               </button>
             </span>
             <span class="input-group-btn">
-              <button id="searchBtn" class="btn btn-info btn-lg" type="button">
+              <button id="searchBtn" class="btn btn-lg btn-primary-outline searchBtn" type="button">
                 <i class="glyphicon glyphicon-search"></i>
               </button>
             </span>
           </div>
         </div>
       </div>
-      <div class="col-md-1 expandAll">
-        <a id="expandAll" class="btn">Expand All</a>
+      <div class="col-md-1 expandAllContainer">
+        <a id="expandAll" class="btn expandAllBtn">Expand All</a>
       </div>
       <div class="col-md-4">
-        <div class="truncate" id="fullTitle"></div>
-        <div class="truncate" id="fullUrl"></div>
+        <div class="truncate fullTitle" id="fullTitle"></div>
+        <div class="truncate fullUrl" id="fullUrl"></div>
       </div>
     </nav>
     
     <div class="navbar-fixed-left space">
-        <div class="side-bar-top">
-          <div class="btn-group center-align" data-toggle="buttons">
-            <label class="btn btn-primary active" id="option1" aria-pressed="true">
-              <input type="radio" name="options" autocomplete="off">Open Tabs
-            </label>
-            <label class="btn btn-primary" id="option2" aria-pressed="true">
-              <input type="radio" name="options" autocomplete="off">Closed Tabs
+      <div class="side-bar-container">
+        <div class="side-bar-top"></div>
+        <!--
+        <div class="btn-group" data-toggle="buttons">
+          <label class="btn btn-primary active" id="option3" aria-pressed="true">
+            <input type="radio" name="options" autocomplete="off">Open Tabs
+          </label>
+          <label class="btn btn-primary" id="option4" aria-pressed="true">
+            <input type="radio" name="options" autocomplete="off">Closed Tabs
+          </label>
+        </div>
+        -->
+        <div class="funkyradio">
+          <div class="box-header">Open Trees</div>
+          <div class="funkyradio-open">
+              <input type="radio" name="radio" id="radio1" checked />
+              <label class="box-text-container" for="radio1" id="option1">
+                <div class="box-title">
+                  Updated a few seconds ago
+                </div>
+                <div class="box-subtitle">
+                  13 Tabs
+              </div>
+              </label>
+          </div>
+          <div class="box-header">Closed Trees</div>
+          <div class="funkyradio-closed">
+            <input type="radio" name="radio" id="radio2"/>
+            <label class="box-text-container" for="radio2" id="option2">
+              <div class="box-title">
+                Saved at 4:15, 8/15/17
+              </div>
+              <div class="box-subtitle">
+                  27 Tabs
+              </div>
             </label>
           </div>
         </div>
+      </div>
     </div>
     
     <div class="row">
-      <div class="col-xs-2"></div>
+      <div class="col-xs-2 tree-padding"></div>
       <tree class="col-xs-1"></tree>
     </div>
   </body>

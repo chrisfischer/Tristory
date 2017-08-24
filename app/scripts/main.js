@@ -1,4 +1,5 @@
-'use strict'
+
+'use strict';
 
 var background = chrome.extension.getBackgroundPage();
 
@@ -38,13 +39,13 @@ $(document).ready(function() {
 	var openTabsRadio = document.getElementById('option1');
 	var closedTabsRadio = document.getElementById('option2');
 
-	searchBox.addEventListener('input', function (evt) {
+	searchBox.addEventListener('input', function () {
 		if (!this.value) {
 			clearBtn.style.visibility = 'hidden';
 
 			// if the search box is emptied then clear results
-			resetResults(window.root)
-			update(window.root)
+			resetResults(window.root);
+			update(window.root);
 		} else {
 			clearBtn.style.visibility = 'visible';
 		}
@@ -53,14 +54,14 @@ $(document).ready(function() {
 	clearBtn.addEventListener('click', function() {
 		resetSearchBar();
 		searchBox.focus();
-		update(window.root)
+		update(window.root);
 	});
 
 	searchBtn.addEventListener('click', function() {
-		parseAndSearch(window.root) 
+		parseAndSearch(window.root) ;
 	});
 	searchBox.addEventListener('keydown', function (e) {
-		if (e.keyCode == 13) { parseAndSearch(window.root) } // enter button
+		if (e.keyCode == 13) { parseAndSearch(window.root); } // enter button
 	});
 
 	// expand all button
@@ -71,17 +72,18 @@ $(document).ready(function() {
 	
 	// switch from alive to dead trees
 	closedTabsRadio.addEventListener('click', function() {
+		console.log('closed')
 		window.root = dead;
 		resetSearchBar(); // reset search
 		$('body, hmtl').animate({ scrollLeft: 0}, 500);
 		update(window.root);
-	})
+	});
 	openTabsRadio.addEventListener('click', function() {
 		window.root = alive;
 		resetSearchBar(); // reset search
 		$('body, hmtl').animate({ scrollLeft: 0}, 500);
 		update(window.root);
-	})
+	});
 
 	function resetSearchBar() {
 		searchBox.value = '';
@@ -106,11 +108,11 @@ function setUpTrees(aliveTree, deadTree) {
 	var diagonal = d3.svg.diagonal()
 			.projection(function(d) { return [d.y, d.x]; });
 
-	var svg = d3.select("body").select("tree").append("svg")
-			.attr("width", width + margin.right + margin.left)
-			.attr("height", height + margin.top + margin.bottom)
-			.append("g")
-			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	var svg = d3.select('body').select('tree').append('svg')
+			.attr('width', width + margin.right + margin.left)
+			.attr('height', height + margin.top + margin.bottom)
+			.append('g')
+			.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
 	window.settings = [margin, width, height, tree, i, duration, diagonal, svg];
 
@@ -121,11 +123,11 @@ function setUpTrees(aliveTree, deadTree) {
 	deadTree.x0 = height / 2;
 	deadTree.y0 = 0;
 
-	console.log(window.root)
+	console.log(window.root);
 
 	window.root.children.forEach(toggleAll); // collapse all but entry node
 
-	console.log(window.root)
+	console.log(window.root);
 
 	if (background.docToLightUp) {
 		expandToSelected(background.docToLightUp, window.root);
@@ -138,7 +140,7 @@ function setUpTrees(aliveTree, deadTree) {
 	console.log(window.root);
 	return;
 
-	d3.select(self.frameElement).style("height", "800px");
+	d3.select(self.frameElement).style('height', '800px');
 
 }
 
@@ -154,113 +156,113 @@ function update(source) {
 	nodes.forEach(function(d) { d.y = d.depth * 180; });
 
 	// Update the nodes…
-	var node = svg.selectAll("g.node")
+	var node = svg.selectAll('g.node')
 			.data(nodes, function(d) { return d.id || (d.id = ++i); });
 
 	// Enter any new nodes at the parent's previous position.
-	var nodeEnter = node.enter().append("g")
-			.attr("class", "node")
-			.attr("id", function(d) { return "u" + d.uid})
-			.attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
-			.on("click", click)
-			.on("mouseover", hoverOn)
-			.on("mouseout", hoverOff);
+	var nodeEnter = node.enter().append('g')
+			.attr('class', 'node')
+			.attr('id', function(d) { return 'u' + d.uid})
+			.attr('transform', function() { return 'translate(' + source.y0 + ',' + source.x0 + ')'; })
+			.on('click', click)
+			.on('mouseover', hoverOn)
+			.on('mouseout', hoverOff);
 
-	nodeEnter.append("circle")
-			.attr("r", 1e-6)
-			.style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; })
-			.style("stroke", function(d) {
+	nodeEnter.append('circle')
+			.attr('r', 1e-6)
+			.style('fill', function(d) { return d._children ? 'lightsteelblue' : '#fff'; })
+			.style('stroke', function(d) {
 				if (d.isResult) { 
-					return 'red' 
+					return 'red';
 				} else {
-					return 'steelblue'
+					return 'steelblue';
 				}
 			})
-			.style("stroke-width", function(d) {
+			.style('stroke-width', function(d) {
 				if (d.isResult) { 
-					return 3 
+					return 3;
 				} else {
-					return 1.5
+					return 1.5;
 				}
-			})
+			});
 
-	nodeEnter.append("text")
-			.attr("x", function(d) { return d.children || d._children ? -10 : 10; })
-			.attr("dy", ".35em")
-			.attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+	nodeEnter.append('text')
+			.attr('x', function(d) { return d.children || d._children ? -10 : 10; })
+			.attr('dy', '.35em')
+			.attr('text-anchor', function(d) { return d.children || d._children ? 'end' : 'start'; })
 			.text(function(d) { 
 				if (d.title) {
 					return d.title; 
 				} else {
-					return d.url.substring(0,20) + '...'
+					return d.url.substring(0,20) + '...';
 				}
 			})
-			.style("fill-opacity", 1e-6)
-			.style("fill", function(d) {
+			.style('fill-opacity', 1e-6)
+			.style('fill', function(d) {
 				if (!d.isAlive) {
-					return 'lightgray'
+					return 'lightgray';
 				}
 				if (d.uid && d.uid == background.docToLightUp.uid) { 
-					return 'steelblue' 
+					return 'steelblue';
 				}
 			})
-			.style("font-weight", function(d) {
-				if (d.uid && d.uid == background.docToLightUp.uid) { return 'bold' }
-			})
+			.style('font-weight', function(d) {
+				if (d.uid && d.uid == background.docToLightUp.uid) { return 'bold'; }
+			});
 
 	// Transition nodes to their new position.
 	var nodeUpdate = node.transition()
 			.duration(duration)
-			.attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+			.attr('transform', function(d) { return 'translate(' + d.y + ',' + d.x + ')'; });
 
-	nodeUpdate.select("circle")
-			.attr("r", 4.5)
-			.style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+	nodeUpdate.select('circle')
+			.attr('r', 4.5)
+			.style('fill', function(d) { return d._children ? 'lightsteelblue' : '#fff'; });
 
-	nodeUpdate.select("text")
-			.style("fill-opacity", 1);
+	nodeUpdate.select('text')
+			.style('fill-opacity', 1);
 
 	// Transition exiting nodes to the parent's new position.
 	var nodeExit = node.exit().transition()
 			.duration(duration)
-			.attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
+			.attr('transform', function() { return 'translate(' + source.y + ',' + source.x + ')'; })
 			.remove();
 
-	nodeExit.select("circle")
-			.attr("r", 1e-6);
+	nodeExit.select('circle')
+			.attr('r', 1e-6);
 
-	nodeExit.select("text")
-			.style("fill-opacity", 1e-6);
+	nodeExit.select('text')
+			.style('fill-opacity', 1e-6);
 
 	// Update the links…
-	var link = svg.selectAll("path.link")
+	var link = svg.selectAll('path.link')
 			.data(links, function(d) { return d.target.id; });
 
 	// Enter any new links at the parent's previous position.
-	link.enter().insert("path", "g")
-			.attr("class", "link")
-			.attr("d", function(d) {
+	link.enter().insert('path', 'g')
+			.attr('class', 'link')
+			.attr('d', function() {
 				var o = {x: source.x0, y: source.y0};
 				return diagonal({source: o, target: o});
 			})
-			.attr("id", function(d) {
-				return "l" + d.target.uid
+			.attr('id', function(d) {
+				return 'l' + d.target.uid;
 			})
-			.style("stroke", function(d) {
+			.style('stroke', function(d) {
 				if (d.target.expandToSelected) {
-					return "steelblue"
+					return 'steelblue';
 				}
 			});
 
 	// Transition links to their new position.
 	link.transition()
 			.duration(duration)
-			.attr("d", diagonal);
+			.attr('d', diagonal);
 
 	// Transition exiting nodes to the parent's new position.
 	link.exit().transition()
 			.duration(duration)
-			.attr("d", function(d) {
+			.attr('d', function() {
 				var o = {x: source.x, y: source.y};
 				return diagonal({source: o, target: o});
 			})
@@ -278,13 +280,13 @@ function update(source) {
 function parseAndSearch(entryNode) {
 	var term = document.getElementById('searchInput').value.toLowerCase();
 
-	if (!term) { return }
+	if (!term) { return; }
 
 	toggleAll(entryNode);
 
 	search(term, entryNode);
 
-	expandOne(entryNode)
+	expandOne(entryNode);
 
 	update(entryNode);
 }
@@ -319,7 +321,7 @@ function hoverOn(d) {
 	}
 }
 
-function hoverOff(d) {
+function hoverOff() {
 	document.getElementById('fullTitle').textContent = '';
 	document.getElementById('fullUrl').textContent = '';
 }
@@ -359,7 +361,7 @@ function expandCollapseAll(btn, entryNode) {
 		$('body, hmtl').animate({ scrollLeft: 0}, 500); // scroll all the way left
 		
 		document.getElementById('searchInput').value = ''
-		document.getElementById('clearBtn').style.visibility = 'hidden' // clear the search
+		document.getElementById('clearBtn').style.visibility = 'hidden'; // clear the search
 		resetResults(entryNode);
 	}
 	update(entryNode);
@@ -384,7 +386,7 @@ function expandOne(d) {
 }
 
 function expandToSelected(targetDocWParents, entryNode) {
-	var steps = []
+	var steps = [];
 	function followParents(d) {
 		steps.push(d.uid);
 		if (d.parent) {
