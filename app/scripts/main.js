@@ -21,6 +21,7 @@ function checkKeyUp(e) {
 document.onkeydown = checkKeyPressed;
 document.onkeyup = checkKeyUp;
 
+
 // scroll all the way left on refresh
 $(document).ready(function() {
 	$(this).scrollLeft(0);
@@ -38,6 +39,10 @@ $(document).ready(function() {
 
 	var openTabsRadio = document.getElementById('option1');
 	var closedTabsRadio = document.getElementById('option2');
+
+	// set tab counts for first two boxs
+	document.getElementById("treeBox1").children['option1'].children[1].textContent = alive.tabCount + ((alive.tabCount == 1) ? ' Tab' : ' Tabs')
+	document.getElementById("treeBox2").children['option2'].children[1].textContent = dead[dead.length-1].tabCount + ((dead[dead.length-1].tabCount == 1) ? ' Tab' : ' Tabs')
 
 	searchBox.addEventListener('input', function () {
 		if (!this.value) {
@@ -71,19 +76,48 @@ $(document).ready(function() {
 
 	
 	// switch from alive to dead trees
-	closedTabsRadio.addEventListener('click', function() {
-		console.log('closed')
-		window.root = dead;
-		resetSearchBar(); // reset search
-		$('body, hmtl').animate({ scrollLeft: 0}, 500);
-		update(window.root);
-	});
 	openTabsRadio.addEventListener('click', function() {
 		window.root = alive;
 		resetSearchBar(); // reset search
 		$('body, hmtl').animate({ scrollLeft: 0}, 500);
 		update(window.root);
 	});
+	closedTabsRadio.addEventListener('click', function() {
+		console.log('closed_0')
+		window.root = dead[dead.length-1];
+		resetSearchBar(); // reset search
+		$('body, hmtl').animate({ scrollLeft: 0}, 500);
+		update(window.root);
+	});
+	
+
+	function makeRadioClickFunc(i) {
+		return function() {
+			console.log('closed_' + i);
+			console.log(dead)
+			window.root = dead[i];
+			resetSearchBar(); // reset search
+			$('body, hmtl').animate({ scrollLeft: 0}, 500);
+			update(window.root);
+		}
+	}
+
+	var closedTreeBox = $('#treeBox2')
+	var radioContainer = $('#radioContainer')
+	for (var i = 1; i < dead.length; i++) {
+		// set up radio buttons
+		var newBox = closedTreeBox.clone();
+		var iForId = i + 3
+		newBox.attr('id', 'treeBox' + iForId);
+		newBox.find('input').attr('id', 'radio' + iForId);
+		var newLabel = newBox.find('label');
+		newLabel.attr('for', 'radio' + iForId);
+		newLabel.attr('id', 'option' + iForId);
+		newLabel.on('click', makeRadioClickFunc(dead.length-1-i));
+		newLabel.find('.box-subtitle').text(dead[dead.length-1-i].tabCount + ((dead[dead.length-1-i].tabCount == 1) ? ' Tab' : ' Tabs'));
+
+		newBox.appendTo(radioContainer); 
+	}
 
 	function resetSearchBar() {
 		searchBox.value = '';
@@ -93,7 +127,7 @@ $(document).ready(function() {
 	
 });
 
-function setUpTrees(aliveTree, deadTree) {
+function setUpTrees(aliveTree, deadTrees) {
 
 	var margin = {top: 40, right: 120, bottom: 20, left: 120};
 	var width = 2500 - margin.right - margin.left;
@@ -116,32 +150,35 @@ function setUpTrees(aliveTree, deadTree) {
 
 	window.settings = [margin, width, height, tree, i, duration, diagonal, svg];
 
+	// set up dead trees first
+	for (var i = 0; i < deadTrees.length; i++) {
+		var tree = deadTrees[i];
+		tree.x0 = height / 2;
+		tree.y0 = 0;
+	}
+
+	if (!aliveTree) { return } // just make sure aliveTree isn't null
+
 	window.root = aliveTree;
 	window.root.x0 = height / 2;
 	window.root.y0 = 0;
 
-	deadTree.x0 = height / 2;
-	deadTree.y0 = 0;
+	// console.log(window.root);
 
-	console.log(window.root);
+	if (window.root.children) {
+		window.root.children.forEach(toggleAll); // collapse all but entry node	
 
-	window.root.children.forEach(toggleAll); // collapse all but entry node
-
-	console.log(window.root);
-
-	if (background.docToLightUp) {
-		expandToSelected(background.docToLightUp, window.root);
+		if (background.docToLightUp) {
+			expandToSelected(background.docToLightUp, window.root);
+		}	
 	}
 
-	console.log(window.root);
+	// console.log(window.root);
 
 	update(window.root);
 
-	console.log(window.root);
+	// console.log(window.root);
 	return;
-
-	d3.select(self.frameElement).style('height', '800px');
-
 }
 
 function update(source) {
@@ -200,7 +237,7 @@ function update(source) {
 			.style('fill-opacity', 1e-6)
 			.style('fill', function(d) {
 				if (!d.isAlive) {
-					return 'lightgray';
+					return '#777';
 				}
 				if (d.uid && d.uid == background.docToLightUp.uid) { 
 					return 'steelblue';
@@ -388,6 +425,8 @@ function expandOne(d) {
 function expandToSelected(targetDocWParents, entryNode) {
 	var steps = [];
 	function followParents(d) {
+		if (!d) { return }
+		
 		steps.push(d.uid);
 		if (d.parent) {
 			followParents(d.parent);

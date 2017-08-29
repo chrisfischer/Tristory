@@ -195,7 +195,7 @@ function findDoc(arrOfDocs, targetTabId, targetUrl, targetUID) {
 	return null;
 }
 
-function onActivate(highlightInfo) {
+chrome.tabs.onActivated.addListener(function(highlightInfo) {
 	var queryInfo = {
 		active: true,
 		currentWindow: true
@@ -232,9 +232,7 @@ function onActivate(highlightInfo) {
 		activeTabId = id;
 		console.log('onSwitch end', urlDocs, currentTabDoc, FLAG_CREATED);
 	});
-}
-
-chrome.tabs.onActivated.addListener(onActivate);
+});
 chrome.tabs.onCreated.addListener(function (tab) {
 	console.log('onCreated begin', FLAG_CREATED, tab);
 
@@ -243,7 +241,7 @@ chrome.tabs.onCreated.addListener(function (tab) {
 		FLAG_CREATED = true;		
 	}
 	console.log('onCreated end', FLAG_CREATED);
-})
+});
 chrome.tabs.onRemoved.addListener(function (tabId, info) {
 	// info has windowId and isWindowClosing
 	function markRemoved(d) {
@@ -257,7 +255,7 @@ chrome.tabs.onRemoved.addListener(function (tabId, info) {
 	urlDocs.forEach(markRemoved);
 	
 	
-})
+});
 
 function getTrees() {
 	if (urlDocs.length == 0) {
@@ -279,20 +277,53 @@ function getTrees() {
 		}
 	}
 
+	var deadGrouped = _chunkify(dead, 6, false)
+	var deadTrees = []
+	
+	for (var i = 0; i < deadGrouped.length; i++) {
+		var group = deadGrouped[i]
+
+		deadTrees.push({
+			'children': ((group.length != 0) ? group : null),
+			'title': 'New Tab',
+			'fullTitle': 'New Tab',
+			'url': 'chrome://newtab',
+			'isAlive': false,
+			'tabCount': _countNodesInGroup(group)
+		})
+	}
+
 	return [{
 				'children': ((alive.length != 0) ? alive : null),
 				'title': 'New Tab',
 				'fullTitle': 'New Tab',
 				'url': 'chrome://newtab',
-				'isAlive': true
+				'isAlive': true,
+				'tabCount': _countNodesInGroup(alive)
 		   },
-		   {
-				'children': ((dead.length != 0) ? dead : null),
-				'title': 'New Tab',
-				'fullTitle': 'New Tab',
-				'url': 'chrome://newtab',
-				'isAlive': false
-		   }];
+		   deadTrees];
+}
+
+function _chunkify(a, size) {
+    
+    if (a.length <= size)
+        return [a];
+
+    var out = []
+    var i = 0
+
+    if (a.length % size === 0) {
+        while (i < a.length) {
+            out.push(a.slice(i, i += size));
+        }
+    }
+    else {
+        while (i < a.length) {
+            out.push(a.slice(i, i += size));
+        }
+    }
+
+    return out;
 }
 
 function _checkBrachForAlive(startingNode) {
@@ -307,6 +338,25 @@ function _checkBrachForAlive(startingNode) {
 		
 	}
 	return false
+}
+
+function _countNodesInGroup(startingNodes) {
+	var count = 1
+
+	if (startingNodes) {
+		count += startingNodes.length; // for the first layer
+
+		function countHelper(node) {
+
+			if (!node.children) { return }
+			count += node.children.length
+			node.children.forEach(countHelper)
+		}
+
+		startingNodes.forEach(countHelper)
+	}
+
+	return count
 }
 
 
