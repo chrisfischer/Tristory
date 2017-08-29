@@ -1,4 +1,3 @@
-
 'use strict';
 
 var background = chrome.extension.getBackgroundPage();
@@ -41,9 +40,14 @@ $(document).ready(function() {
 	var closedTabsRadio = document.getElementById('option2');
 
 	// set tab counts for first two boxs
-	document.getElementById("treeBox1").children['option1'].children[1].textContent = alive.tabCount + ((alive.tabCount == 1) ? ' Tab' : ' Tabs')
-	document.getElementById("treeBox2").children['option2'].children[1].textContent = dead[dead.length-1].tabCount + ((dead[dead.length-1].tabCount == 1) ? ' Tab' : ' Tabs')
+	var treeBox1 = document.getElementById("treeBox1").children['option1']
+	treeBox1.children[0].textContent = (alive.maxTime != 0) ? "Updated " + moment(alive.maxTime).fromNow() : "Updated a few seconds ago"
+	treeBox1.children[1].textContent = alive.tabCount + ((alive.tabCount == 1) ? ' Tab' : ' Tabs')
+	var treeBox2 = document.getElementById("treeBox2").children['option2']
+	treeBox2.children[0].textContent = (dead[dead.length-1].maxTime != 0) ? "Updated " + moment(dead[dead.length-1].maxTime).fromNow() : "Updated a few seconds ago"
+	treeBox2.children[1].textContent = dead[dead.length-1].tabCount + ((dead[dead.length-1].tabCount == 1) ? ' Tab' : ' Tabs')
 
+	// set up search box
 	searchBox.addEventListener('input', function () {
 		if (!this.value) {
 			clearBtn.style.visibility = 'hidden';
@@ -56,15 +60,18 @@ $(document).ready(function() {
 		}
 	});
 
+	// set up clear button in search box
 	clearBtn.addEventListener('click', function() {
 		resetSearchBar();
 		searchBox.focus();
 		update(window.root);
 	});
 
+	// set up search button in search box
 	searchBtn.addEventListener('click', function() {
 		parseAndSearch(window.root) ;
 	});
+	// enter button
 	searchBox.addEventListener('keydown', function (e) {
 		if (e.keyCode == 13) { parseAndSearch(window.root); } // enter button
 	});
@@ -82,19 +89,12 @@ $(document).ready(function() {
 		$('body, hmtl').animate({ scrollLeft: 0}, 500);
 		update(window.root);
 	});
-	closedTabsRadio.addEventListener('click', function() {
-		console.log('closed_0')
-		window.root = dead[dead.length-1];
-		resetSearchBar(); // reset search
-		$('body, hmtl').animate({ scrollLeft: 0}, 500);
-		update(window.root);
-	});
+	closedTabsRadio.addEventListener('click', makeRadioClickFunc(dead.length-1));
 	
-
+	// func for setting up extra closed tabs
 	function makeRadioClickFunc(i) {
 		return function() {
 			console.log('closed_' + i);
-			console.log(dead)
 			window.root = dead[i];
 			resetSearchBar(); // reset search
 			$('body, hmtl').animate({ scrollLeft: 0}, 500);

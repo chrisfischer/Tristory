@@ -99,7 +99,8 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 				'title': null,
 				'fullTitle': null,
 				'isAlive': true,
-				'uid': _getUID()
+				'uid': _getUID(),
+				'time': Date.now()
 		};
 		addNewStartingNode(doc);
 
@@ -118,7 +119,8 @@ chrome.tabs.onUpdated.addListener(function(updatedTabId, changeInfo, tab) {
 				'title': null,
 				'fullTitle': null,
 				'isAlive': true,
-				'uid': _getUID()
+				'uid': _getUID(),
+				'time': Date.now()
 		};
 		addChild(doc);
 
@@ -262,7 +264,7 @@ function getTrees() {
 		return null
 	}
 
-	var docs = JSON.parse(JSON.stringify(urlDocs, ['url', 'title', 'fullTitle', 'children', 'uid', 'isAlive']));
+	var docs = JSON.parse(JSON.stringify(urlDocs, ['url', 'title', 'fullTitle', 'children', 'uid', 'isAlive', 'time']));
 
 	var alive = []
 	var dead = []
@@ -282,24 +284,27 @@ function getTrees() {
 	
 	for (var i = 0; i < deadGrouped.length; i++) {
 		var group = deadGrouped[i]
-
+		var [count, maxTime] = _countNodesInGroup(group)
 		deadTrees.push({
 			'children': ((group.length != 0) ? group : null),
 			'title': 'New Tab',
 			'fullTitle': 'New Tab',
 			'url': 'chrome://newtab',
 			'isAlive': false,
-			'tabCount': _countNodesInGroup(group)
+			'tabCount': count,
+			'maxTime': maxTime
 		})
 	}
 
+	var [count, maxTime] = _countNodesInGroup(alive)
 	return [{
 				'children': ((alive.length != 0) ? alive : null),
 				'title': 'New Tab',
 				'fullTitle': 'New Tab',
 				'url': 'chrome://newtab',
 				'isAlive': true,
-				'tabCount': _countNodesInGroup(alive)
+				'tabCount': count,
+				'maxTime': maxTime
 		   },
 		   deadTrees];
 }
@@ -341,22 +346,26 @@ function _checkBrachForAlive(startingNode) {
 }
 
 function _countNodesInGroup(startingNodes) {
-	var count = 1
+	var count = 1;
+
+	var maxTime = 0;
 
 	if (startingNodes) {
 		count += startingNodes.length; // for the first layer
 
 		function countHelper(node) {
 
+			if (maxTime < node.time) { maxTime = node.time }
+
 			if (!node.children) { return }
-			count += node.children.length
-			node.children.forEach(countHelper)
+			count += node.children.length;
+			node.children.forEach(countHelper);
 		}
 
-		startingNodes.forEach(countHelper)
+		startingNodes.forEach(countHelper);
 	}
 
-	return count
+	return [count, maxTime];
 }
 
 
