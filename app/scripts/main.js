@@ -41,10 +41,10 @@ $(document).ready(function() {
 
 	// set tab counts for first two boxs
 	var treeBox1 = document.getElementById("treeBox1").children['option1']
-	treeBox1.children[0].textContent = (alive.maxTime != 0) ? "Updated " + moment(alive.maxTime).fromNow() : "Updated a few seconds ago"
+	treeBox1.children[0].textContent = (alive.maxTime != 0) ? "Updated " + moment(alive.maxTime).fromNow() : "Empty"
 	treeBox1.children[1].textContent = alive.tabCount + ((alive.tabCount == 1) ? ' Tab' : ' Tabs')
 	var treeBox2 = document.getElementById("treeBox2").children['option2']
-	treeBox2.children[0].textContent = (dead[dead.length-1].maxTime != 0) ? "Updated " + moment(dead[dead.length-1].maxTime).fromNow() : "Updated a few seconds ago"
+	treeBox2.children[0].textContent = (dead[dead.length-1].maxTime != 0) ? "Updated " + moment(dead[dead.length-1].maxTime).fromNow() : "Empty"
 	treeBox2.children[1].textContent = dead[dead.length-1].tabCount + ((dead[dead.length-1].tabCount == 1) ? ' Tab' : ' Tabs')
 
 	// set up search box
