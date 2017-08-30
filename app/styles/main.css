@@ -146,18 +146,23 @@ label.focus {
 }
 
 .side-bar-container {
-  padding: 10px;
+  height: -webkit-calc(100% - 75px);
+  height:    -moz-calc(100% - 75px);
+  height:         calc(100% - 75px);
+  overflow-y: auto;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .side-bar-top {
-  margin-top: 40px;
+  margin-top: 65px;
 }
 
 .box-header {
   color: #777;
   font-size: 12pt;
   font-weight: 400;
-  padding-top: 25px;
+  padding-top: 15px;
   text-align: left;
 }
 

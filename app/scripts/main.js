@@ -115,7 +115,7 @@ $(document).ready(function() {
 		newLabel.attr('id', 'option' + iForId);
 		newLabel.on('click', makeRadioClickFunc(dead.length-1-i));
 		newLabel.find('.box-subtitle').text(dead[dead.length-1-i].tabCount + ((dead[dead.length-1-i].tabCount == 1) ? ' Tab' : ' Tabs'));
-
+		newLabel.find('.box-title').text(((dead[dead.length-1-i].maxTime != 0) ? "Updated " + moment(dead[dead.length-1-i].maxTime).fromNow() : "Empty"))
 		newBox.appendTo(radioContainer); 
 	}
 
