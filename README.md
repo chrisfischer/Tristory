@@ -3,7 +3,7 @@
 A foray into Chrome Extensions. Still a work in progress. d3 is used for the tree. 
 
 ### Install
-You can install through the [Chrome Web Store](chrome.google.com/webstore/detail/tristory/fbibolioooglbcpfgckjeoeidnakgngo) or  manually using developer mode in Chrome.
+You can install through the [Chrome Web Store](https://chrome.google.com/webstore/detail/tristory/fbibolioooglbcpfgckjeoeidnakgngo) or  manually using developer mode in Chrome.
 
 ### Screenshots
 
