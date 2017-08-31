@@ -44,7 +44,7 @@ $(document).ready(function() {
 	treeBox1.children[0].textContent = (alive.maxTime != 0) ? "Updated " + moment(alive.maxTime).fromNow() : "Empty"
 	treeBox1.children[1].textContent = alive.tabCount + ((alive.tabCount == 1) ? ' Tab' : ' Tabs')
 	var treeBox2 = document.getElementById("treeBox2").children['option2']
-	treeBox2.children[0].textContent = (dead[dead.length-1].maxTime != 0) ? "Updated " + moment(dead[dead.length-1].maxTime).fromNow() : "Empty"
+	treeBox2.children[0].textContent = (dead[dead.length-1].maxTime != 0) ? "Recorded " + moment(dead[dead.length-1].maxTime).fromNow() : "Empty"
 	treeBox2.children[1].textContent = dead[dead.length-1].tabCount + ((dead[dead.length-1].tabCount == 1) ? ' Tab' : ' Tabs')
 
 	// set up search box
@@ -115,7 +115,7 @@ $(document).ready(function() {
 		newLabel.attr('id', 'option' + iForId);
 		newLabel.on('click', makeRadioClickFunc(dead.length-1-i));
 		newLabel.find('.box-subtitle').text(dead[dead.length-1-i].tabCount + ((dead[dead.length-1-i].tabCount == 1) ? ' Tab' : ' Tabs'));
-		newLabel.find('.box-title').text(((dead[dead.length-1-i].maxTime != 0) ? "Updated " + moment(dead[dead.length-1-i].maxTime).fromNow() : "Empty"))
+		newLabel.find('.box-title').text(((dead[dead.length-1-i].maxTime != 0) ? "Recorded " + moment(dead[dead.length-1-i].maxTime).fromNow() : "Empty"))
 		newBox.appendTo(radioContainer); 
 	}
 
